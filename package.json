@@ -1,0 +1,103 @@
+{
+  "name": "@bidster/clickhouse-tools",
+  "version": "0.1.0-rc.0",
+  "description": "Open-source ClickHouse tools for TypeScript, Node.js, and NestJS applications.",
+  "keywords": [
+    "clickhouse",
+    "typescript",
+    "nestjs",
+    "batching"
+  ],
+  "homepage": "https://github.com/bidster/clickhouse-tools#readme",
+  "bugs": {
+    "url": "https://github.com/bidster/clickhouse-tools/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bidster/clickhouse-tools.git"
+  },
+  "license": "MIT",
+  "author": "Bidster (https://bidster.net)",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./nest": {
+      "import": {
+        "types": "./dist/types/nest/index.d.ts",
+        "default": "./dist/esm/nest/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/nest/index.d.ts",
+        "default": "./dist/cjs/nest/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json && tsc -p tsconfig.cjs.json && node -e \"require('node:fs').writeFileSync('dist/cjs/package.json', '{\\\"type\\\":\\\"commonjs\\\"}\\n')\"",
+    "clean": "rimraf dist coverage",
+    "lint": "eslint src test --max-warnings=0",
+    "prepack": "npm run build && npm run lint && npm run typecheck && npm test && npm run test:package",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:package": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module Node16 --moduleResolution Node16 test/package/commonjs-consumer.cts && node test/package/exports.mjs",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run build && npm run lint && npm run typecheck && npm test && npm run test:package"
+  },
+  "dependencies": {
+    "@clickhouse/client": "^1.23.1"
+  },
+  "peerDependencies": {
+    "@nestjs/common": ">=10 <12",
+    "reflect-metadata": "^0.1.12 || ^0.2.0",
+    "rxjs": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    },
+    "reflect-metadata": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/testing": "^11.1.6",
+    "@types/node": "^24.3.1",
+    "eslint": "^9.33.0",
+    "reflect-metadata": "^0.2.2",
+    "rimraf": "^6.0.1",
+    "rxjs": "^7.8.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
