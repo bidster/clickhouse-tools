@@ -260,6 +260,51 @@ Custom providers may pass any Nest `InjectionToken` through `clientToken`. Use
 `getClickHouseBatchWriterToken(name)` when resolving a writer without the
 injection decorator.
 
+### Prometheus metrics
+
+Prometheus support is optional. Install `prom-client` in the application and
+pass its module namespace to `prometheus` when registering writers:
+
+```ts
+import * as prometheus from "prom-client";
+
+ClickHouseBatchWriterModule.forRoot({
+  prometheus: {
+    client: prometheus,
+    prefix: "service_",
+  },
+  writers: [
+    {
+      name: "events",
+      insert: { table: "events", columns: ["id", "created_at"] },
+    },
+  ],
+});
+```
+
+The same `prometheus` option is available to `register()` and
+`registerAsync()`. The prefix is used verbatim; include a trailing underscore
+when one is required. Every metric has `writer` and `table` labels:
+
+| Metric suffix after `<prefix>clickhouse_batch_writer_` | Type | Meaning |
+| --- | --- | --- |
+| `rows_accepted_total` | Counter | Rows accepted by `write()` |
+| `rows_inserted_total` | Counter | Rows acknowledged by successful inserts |
+| `queue_rows` | Gauge | Buffered and encoded rows awaiting success |
+| `queue_batches` | Gauge | Partial buffered and encoded batches awaiting success |
+| `batches_succeeded_total` | Counter | Successfully inserted batches |
+| `insert_attempts_total` | Counter | All insert attempts |
+| `insert_errors_total` | Counter | Failed insert attempts |
+| `retries_total` | Counter | Attempts after the initial attempt |
+| `batch_size_rows` | Histogram | Rows per successful batch |
+| `insert_duration_seconds` | Histogram | Duration of successful and failed attempts |
+| `delivery_latency_seconds` | Histogram | Time from the oldest accepted row to batch success |
+
+Metric collectors are reused from the supplied `prom-client` registry, so
+multiple writer modules using the same prefix do not register them twice.
+Queue gauges include a non-empty partial buffer and an in-flight batch, and
+decrease only after ClickHouse has acknowledged the insert.
+
 On insert failure, the batch remains at the head of the delivery queue. The
 single delivery loop waits and retries it, preserving strict FIFO order. Its
 delay doubles after consecutive failures up to `maxRetryDelayMs` and resets

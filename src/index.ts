@@ -1,6 +1,7 @@
 export {
   ClickHouseBatchWriter,
   type ClickHouseBatchWriterInsertOptions,
+  type ClickHouseBatchWriterMetrics,
   type ClickHouseBatchWriterOptions,
   type ClickHouseToolsLogger,
 } from './batch-writer.js';

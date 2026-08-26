@@ -12,5 +12,9 @@ export {
   type ClickHouseBatchWriterModuleOptions,
   type ClickHouseBatchWriterRootOptions,
 } from "./batch-writer.module.js";
+export {
+  type ClickHouseBatchWriterPrometheusClient,
+  type ClickHouseBatchWriterPrometheusOptions,
+} from "./batch-writer.metrics.js";
 export { InjectClickHouseBatchWriter } from "./batch-writer.decorators.js";
 export { getClickHouseBatchWriterToken } from "./batch-writer.tokens.js";

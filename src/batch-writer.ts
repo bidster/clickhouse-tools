@@ -16,6 +16,18 @@ export interface ClickHouseToolsLogger {
   error?(message: string, error?: Error): void;
 }
 
+export interface ClickHouseBatchWriterMetrics {
+  rowsAccepted(count: number): void;
+  insertAttempt(retry: boolean): void;
+  insertFailed(durationSeconds: number): void;
+  batchInserted(
+    rowCount: number,
+    insertDurationSeconds: number,
+    deliveryLatencySeconds: number,
+  ): void;
+  queueChanged(rowCount: number, batchCount: number): void;
+}
+
 export interface ClickHouseBatchWriterInsertOptions<T extends object> {
   table: string;
   columns: ReadonlyArray<keyof T & string>;
@@ -32,6 +44,7 @@ export interface ClickHouseBatchWriterOptions<T extends object> {
   maxRetryDelayMs?: number;
   shutdownTimeoutMs?: number;
   logger?: ClickHouseToolsLogger;
+  metrics?: ClickHouseBatchWriterMetrics;
 }
 
 interface Batch {
@@ -39,6 +52,7 @@ interface Batch {
   format: ClickHouseTextInsertFormat;
   rowCount: number;
   attempts: number;
+  acceptedAt: number;
 }
 
 const MAXIMUM_TIMER_DELAY_MS = 2_147_483_647;
@@ -58,6 +72,7 @@ export class ClickHouseBatchWriter<T extends object> {
   private readonly maxRetryDelayMs: number;
   private readonly shutdownTimeoutMs: number;
   private readonly logger?: ClickHouseToolsLogger;
+  private readonly metrics?: ClickHouseBatchWriterMetrics;
 
   private deliveryQueue: Batch[] = [];
   private readonly unsubscribeBuffer: () => void;
@@ -67,6 +82,7 @@ export class ClickHouseBatchWriter<T extends object> {
     abortController: AbortController;
   };
   private closed = false;
+  private bufferedRowsAcceptedAt?: number;
 
   constructor(options: ClickHouseBatchWriterOptions<T>) {
     if (options.insert.columns.length === 0) {
@@ -88,6 +104,7 @@ export class ClickHouseBatchWriter<T extends object> {
     this.maxRetryDelayMs = options.maxRetryDelayMs ?? 30_000;
     this.shutdownTimeoutMs = options.shutdownTimeoutMs ?? 30_000;
     this.logger = options.logger;
+    this.metrics = options.metrics;
 
     if (!Number.isSafeInteger(this.maxBatchSize) || this.maxBatchSize <= 0) {
       throw new RangeError('maxBatchSize must be a positive safe integer');
@@ -109,12 +126,21 @@ export class ClickHouseBatchWriter<T extends object> {
     }
 
     this.unsubscribeBuffer = this.buffer.subscribe(() => {
-      if (this.closed || this.buffer.size < this.maxBatchSize) return;
+      if (this.closed) return;
+      if (this.buffer.size > 0 && this.bufferedRowsAcceptedAt === undefined) {
+        this.bufferedRowsAcceptedAt = performance.now();
+      }
+      this.metrics?.queueChanged(
+        this.remainingRowCount,
+        this.remainingBatchCount,
+      );
+      if (this.buffer.size < this.maxBatchSize) return;
 
       this.queueNextBatch();
       this.restartFlushTimer();
       void this.drainDeliveryQueue();
     });
+    this.metrics?.queueChanged(this.remainingRowCount, this.remainingBatchCount);
   }
 
   open(): void {
@@ -132,7 +158,13 @@ export class ClickHouseBatchWriter<T extends object> {
 
   write(rows: readonly T[]): void {
     if (this.closed || rows.length === 0) return;
+    const wasEmpty = this.buffer.size === 0;
     this.buffer.add(rows);
+    if (wasEmpty && this.buffer.size > 0) {
+      this.bufferedRowsAcceptedAt = performance.now();
+    }
+    this.metrics?.rowsAccepted(rows.length);
+    this.metrics?.queueChanged(this.remainingRowCount, this.remainingBatchCount);
   }
 
   async flush(): Promise<void> {
@@ -173,12 +205,22 @@ export class ClickHouseBatchWriter<T extends object> {
     if (this.buffer.size === 0) return;
     const rows = this.buffer.drain();
     if (rows.length === 0) return;
-    this.deliveryQueue.push({
-      body: this.rowEncoder.encode(rows),
-      format: this.rowEncoder.format,
-      rowCount: rows.length,
-      attempts: 0,
-    });
+    const acceptedAt = this.bufferedRowsAcceptedAt ?? performance.now();
+    this.bufferedRowsAcceptedAt = undefined;
+    try {
+      this.deliveryQueue.push({
+        body: this.rowEncoder.encode(rows),
+        format: this.rowEncoder.format,
+        rowCount: rows.length,
+        attempts: 0,
+        acceptedAt,
+      });
+    } finally {
+      this.metrics?.queueChanged(
+        this.remainingRowCount,
+        this.remainingBatchCount,
+      );
+    }
   }
 
   private drainDeliveryQueue(): Promise<void> {
@@ -199,6 +241,8 @@ export class ClickHouseBatchWriter<T extends object> {
     while (this.deliveryQueue.length > 0 && !signal.aborted) {
       const batch = this.deliveryQueue[0]!;
       batch.attempts += 1;
+      this.metrics?.insertAttempt(batch.attempts > 1);
+      const insertStartedAt = performance.now();
 
       try {
         await this.client.insert({
@@ -208,6 +252,9 @@ export class ClickHouseBatchWriter<T extends object> {
           values: Readable.from([batch.body], { objectMode: false }),
         });
       } catch (cause) {
+        this.metrics?.insertFailed(
+          (performance.now() - insertStartedAt) / 1_000,
+        );
         if (signal.aborted) return;
         retryDelayMs = Math.min(
           retryDelayMs === 0 ? this.flushIntervalMs : retryDelayMs * 2,
@@ -223,6 +270,15 @@ export class ClickHouseBatchWriter<T extends object> {
       }
 
       this.deliveryQueue.shift();
+      this.metrics?.batchInserted(
+        batch.rowCount,
+        (performance.now() - insertStartedAt) / 1_000,
+        (performance.now() - batch.acceptedAt) / 1_000,
+      );
+      this.metrics?.queueChanged(
+        this.remainingRowCount,
+        this.remainingBatchCount,
+      );
       retryDelayMs = 0;
       this.logger?.verbose?.(
         `Inserted ${batch.rowCount} rows into ${this.insert.table}`,
@@ -272,5 +328,9 @@ export class ClickHouseBatchWriter<T extends object> {
       this.buffer.size +
       this.deliveryQueue.reduce((sum, batch) => sum + batch.rowCount, 0)
     );
+  }
+
+  private get remainingBatchCount(): number {
+    return this.deliveryQueue.length + (this.buffer.size > 0 ? 1 : 0);
   }
 }

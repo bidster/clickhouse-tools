@@ -13,11 +13,15 @@ import {
   type ClickHouseBatchWriterOptions,
 } from "../batch-writer.js";
 import { getClickHouseBatchWriterToken } from "./batch-writer.tokens.js";
+import {
+  ClickHouseBatchWriterPrometheusMetrics,
+  type ClickHouseBatchWriterPrometheusOptions,
+} from "./batch-writer.metrics.js";
 import { CLICKHOUSE_CLIENT } from "./clickhouse.tokens.js";
 
 type WriterConfiguration<T extends object> = Omit<
   ClickHouseBatchWriterOptions<T>,
-  "client" | "logger"
+  "client" | "logger" | "metrics"
 >;
 
 export interface ClickHouseBatchWriterDefinition<
@@ -33,6 +37,7 @@ export interface ClickHouseBatchWriterRootOptions extends Pick<
   writers: ReadonlyArray<ClickHouseBatchWriterDefinition<any>>;
   clientToken?: InjectionToken;
   global?: boolean;
+  prometheus?: ClickHouseBatchWriterPrometheusOptions;
 }
 
 export interface ClickHouseBatchWriterModuleOptions<T extends object>
@@ -40,6 +45,7 @@ export interface ClickHouseBatchWriterModuleOptions<T extends object>
   name: string;
   clientToken?: InjectionToken;
   global?: boolean;
+  prometheus?: ClickHouseBatchWriterPrometheusOptions;
 }
 
 export interface ClickHouseBatchWriterModuleAsyncOptions<
@@ -48,6 +54,7 @@ export interface ClickHouseBatchWriterModuleAsyncOptions<
   name: string;
   clientToken?: InjectionToken;
   global?: boolean;
+  prometheus?: ClickHouseBatchWriterPrometheusOptions;
   inject?: InjectionToken[];
   useFactory: (
     ...args: any[]
@@ -55,8 +62,10 @@ export interface ClickHouseBatchWriterModuleAsyncOptions<
 }
 
 function createWriter<T extends object>(
+  name: string,
   client: ClickHouseClient,
   configuration: WriterConfiguration<T>,
+  prometheus?: ClickHouseBatchWriterPrometheusMetrics,
 ): ClickHouseBatchWriter<T> {
   const logger = new Logger(
     `ClickHouseBatchWriter:${configuration.insert.table}`,
@@ -65,6 +74,7 @@ function createWriter<T extends object>(
   return new ClickHouseBatchWriter({
     ...configuration,
     client,
+    metrics: prometheus?.forWriter(name, configuration.insert.table),
     logger: {
       verbose: (message) => logger.verbose(message),
       warn: (message) => logger.warn(message),
@@ -94,12 +104,16 @@ class ClickHouseBatchWriterRegistry
   constructor(
     definitions: ReadonlyArray<ClickHouseBatchWriterDefinition<any>>,
     client: ClickHouseClient,
+    prometheus?: ClickHouseBatchWriterPrometheusOptions,
   ) {
+    const metrics = prometheus
+      ? new ClickHouseBatchWriterPrometheusMetrics(prometheus)
+      : undefined;
     definitions.forEach((definition) => {
       const { name, ...configuration } = definition;
       this.writers.set(
         name,
-        createWriter(client, configuration),
+        createWriter(name, client, configuration, metrics),
       );
     });
   }
@@ -145,7 +159,11 @@ export class ClickHouseBatchWriterModule {
           provide: CLICKHOUSE_BATCH_WRITER_REGISTRY,
           inject: [options.clientToken ?? CLICKHOUSE_CLIENT],
           useFactory: (client: ClickHouseClient) =>
-            new ClickHouseBatchWriterRegistry(options.writers, client),
+            new ClickHouseBatchWriterRegistry(
+              options.writers,
+              client,
+              options.prometheus,
+            ),
         },
       ],
       exports: [CLICKHOUSE_BATCH_WRITER_REGISTRY],
@@ -174,6 +192,7 @@ export class ClickHouseBatchWriterModule {
       clientToken = CLICKHOUSE_CLIENT,
       global = false,
       imports = [],
+      prometheus,
       ...configuration
     } = options;
     const writerToken = getClickHouseBatchWriterToken(name);
@@ -186,8 +205,12 @@ export class ClickHouseBatchWriterModule {
         {
           provide: writerToken,
           inject: [clientToken],
-          useFactory: (client: ClickHouseClient) =>
-            createWriter(client, configuration),
+          useFactory: (client: ClickHouseClient) => {
+            const metrics = prometheus
+              ? new ClickHouseBatchWriterPrometheusMetrics(prometheus)
+              : undefined;
+            return createWriter(name, client, configuration, metrics);
+          },
         },
         {
           provide: lifecycleToken,
@@ -216,7 +239,16 @@ export class ClickHouseBatchWriterModule {
           provide: writerToken,
           inject: [clientToken, ...(options.inject ?? [])],
           useFactory: async (client: ClickHouseClient, ...args: any[]) =>
-            createWriter(client, await options.useFactory(...args)),
+            createWriter(
+              options.name,
+              client,
+              await options.useFactory(...args),
+              options.prometheus
+                ? new ClickHouseBatchWriterPrometheusMetrics(
+                    options.prometheus,
+                  )
+                : undefined,
+            ),
         },
         {
           provide: lifecycleToken,
