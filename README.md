@@ -297,6 +297,8 @@ when one is required. Every metric has `writer` and `table` labels:
 | `insert_errors_total` | Counter | Failed insert attempts |
 | `retries_total` | Counter | Attempts after the initial attempt |
 | `batch_size_rows` | Histogram | Rows per successful batch |
+| `batch_fill_ratio` | Histogram | Successful batch size divided by `maxBatchSize` |
+| `max_batch_size_rows` | Gauge | Configured `maxBatchSize` |
 | `insert_duration_seconds` | Histogram | Duration of successful and failed attempts |
 | `delivery_latency_seconds` | Histogram | Time from the oldest accepted row to batch success |
 

@@ -1,6 +1,6 @@
 {
   "name": "@bidster/clickhouse-tools",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "Open-source ClickHouse tools for TypeScript, Node.js, and NestJS applications.",
   "keywords": [
     "clickhouse",

@@ -17,6 +17,7 @@ export interface ClickHouseToolsLogger {
 }
 
 export interface ClickHouseBatchWriterMetrics {
+  writerConfigured(maxBatchSize: number): void;
   rowsAccepted(count: number): void;
   insertAttempt(retry: boolean): void;
   insertFailed(durationSeconds: number): void;
@@ -124,6 +125,8 @@ export class ClickHouseBatchWriter<T extends object> {
         );
       }
     }
+
+    this.metrics?.writerConfigured(this.maxBatchSize);
 
     this.unsubscribeBuffer = this.buffer.subscribe(() => {
       if (this.closed) return;

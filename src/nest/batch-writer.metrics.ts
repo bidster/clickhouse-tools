@@ -28,6 +28,7 @@ type MetricDefinition = {
   type: "Counter" | "Gauge" | "Histogram";
   name: string;
   help: string;
+  buckets?: readonly number[];
 };
 
 const METRIC_DEFINITIONS = [
@@ -75,6 +76,21 @@ const METRIC_DEFINITIONS = [
     type: "Histogram",
     name: "batch_size_rows",
     help: "Number of rows in successfully inserted ClickHouse batches.",
+    buckets: [
+      1, 10, 50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000,
+      50_000, 100_000,
+    ],
+  },
+  {
+    type: "Histogram",
+    name: "batch_fill_ratio",
+    help: "Successful ClickHouse batch size divided by the configured maximum batch size.",
+    buckets: [0.1, 0.25, 0.5, 0.75, 0.9, 1, 1.25, 1.5, 2, 5],
+  },
+  {
+    type: "Gauge",
+    name: "max_batch_size_rows",
+    help: "Configured maximum batch size for ClickHouse batch writers.",
   },
   {
     type: "Histogram",
@@ -107,6 +123,9 @@ export class ClickHouseBatchWriterPrometheusMetrics {
               help: definition.help,
               labelNames: ["writer", "table"],
               registers: [options.client.register],
+              ...("buckets" in definition
+                ? { buckets: [...definition.buckets] }
+                : {}),
             })) as unknown as PrometheusMetric,
         ];
       }),
@@ -115,10 +134,15 @@ export class ClickHouseBatchWriterPrometheusMetrics {
 
   forWriter(writer: string, table: string): ClickHouseBatchWriterMetrics {
     const labels = { writer, table };
+    let maxBatchSize: number;
     const metric = (name: (typeof METRIC_DEFINITIONS)[number]["name"]) =>
       this.metrics[name].labels(labels);
 
     return {
+      writerConfigured: (configuredMaxBatchSize) => {
+        maxBatchSize = configuredMaxBatchSize;
+        metric("max_batch_size_rows").set(configuredMaxBatchSize);
+      },
       rowsAccepted: (count) => metric("rows_accepted_total").inc(count),
       insertAttempt: (retry) => {
         metric("insert_attempts_total").inc();
@@ -136,6 +160,7 @@ export class ClickHouseBatchWriterPrometheusMetrics {
         metric("rows_inserted_total").inc(rowCount);
         metric("batches_succeeded_total").inc();
         metric("batch_size_rows").observe(rowCount);
+        metric("batch_fill_ratio").observe(rowCount / maxBatchSize);
         metric("insert_duration_seconds").observe(insertDurationSeconds);
         metric("delivery_latency_seconds").observe(deliveryLatencySeconds);
       },

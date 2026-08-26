@@ -81,6 +81,9 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
       await metricValue("test_clickhouse_batch_writer_queue_batches", "events"),
     ).toBe(1);
     expect(insert).not.toHaveBeenCalled();
+    expect(
+      await metricValue("test_clickhouse_batch_writer_max_batch_size_rows", "events"),
+    ).toBe(3);
 
     const flushing = writer.flush();
     await vi.advanceTimersByTimeAsync(0);
@@ -134,6 +137,20 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
     ).toBe(1);
     expect(
       await metricValue(
+        "test_clickhouse_batch_writer_batch_fill_ratio",
+        "events",
+        "test_clickhouse_batch_writer_batch_fill_ratio_count",
+      ),
+    ).toBe(1);
+    expect(
+      await metricValue(
+        "test_clickhouse_batch_writer_batch_fill_ratio",
+        "events",
+        "test_clickhouse_batch_writer_batch_fill_ratio_sum",
+      ),
+    ).toBeCloseTo(2 / 3);
+    expect(
+      await metricValue(
         "test_clickhouse_batch_writer_insert_duration_seconds",
         "events",
         "test_clickhouse_batch_writer_insert_duration_seconds_count",
@@ -176,7 +193,7 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
       ],
     }).compile();
 
-    expect(await prometheus.register.getMetricsAsJSON()).toHaveLength(11);
+    expect(await prometheus.register.getMetricsAsJSON()).toHaveLength(13);
     await moduleRef.close();
   });
 });
