@@ -1,6 +1,6 @@
 {
   "name": "@bidster/clickhouse-tools",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Open-source ClickHouse tools for TypeScript, Node.js, and NestJS applications.",
   "keywords": [
     "clickhouse",
@@ -61,10 +61,8 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run build && npm run lint && npm run typecheck && npm test && npm run test:package"
   },
-  "dependencies": {
-    "@clickhouse/client": "^1.23.1"
-  },
   "peerDependencies": {
+    "@clickhouse/client": "^1.24.1",
     "@nestjs/common": ">=10 <12",
     "prom-client": "^15.0.0",
     "reflect-metadata": "^0.1.12 || ^0.2.0",
@@ -85,6 +83,7 @@
     }
   },
   "devDependencies": {
+    "@clickhouse/client": "1.24.1",
     "@eslint/js": "^9.33.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/testing": "^11.1.6",

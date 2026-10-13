@@ -8,8 +8,12 @@ business rules.
 ## Installation
 
 ```sh
-npm install @bidster/clickhouse-tools
+npm install @bidster/clickhouse-tools @clickhouse/client@^1.24.1
 ```
+
+`@clickhouse/client` is a required peer dependency. The application selects a
+compatible version (`^1.24.1`) used by both the application and this library.
+Version 1.24.1 includes the fix for queued request cancellation with keep-alive.
 
 NestJS support is optional. Install the Nest peer dependencies only when using
 the `/nest` entry point.
