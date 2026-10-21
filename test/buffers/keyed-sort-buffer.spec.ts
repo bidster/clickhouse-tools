@@ -65,6 +65,58 @@ describe(KeyedSortBuffer.name, () => {
     ]);
   });
 
+  it('retains complete row references and sorts campaign groups stably', () => {
+    type BidderRow = { campaign_id: string; value: number };
+    const buffer = new KeyedSortBuffer<BidderRow, ['campaign_id']>({
+      keys: ['campaign_id'],
+    });
+    const b = Object.freeze({ campaign_id: 'b', value: 1 });
+    const aFirst = Object.freeze({ campaign_id: 'a', value: 2 });
+    const aSecond = Object.freeze({ campaign_id: 'a', value: 3 });
+
+    buffer.add([b, aFirst]);
+    buffer.add([aSecond, b]);
+
+    const rows = buffer.drain();
+    expect(rows).toHaveLength(4);
+    expect(rows[0]).toBe(aFirst);
+    expect(rows[1]).toBe(aSecond);
+    expect(rows[2]).toBe(b);
+    expect(rows[3]).toBe(b);
+    expect(buffer.size).toBe(0);
+    expect(buffer.drain()).toEqual([]);
+
+    buffer.add([aFirst]);
+    expect(buffer.drain()[0]).toBe(aFirst);
+  });
+
+  it('preserves identity and insertion order when complete rows and keyed tails are mixed', () => {
+    const buffer = new KeyedSortBuffer<EventRow, ['tenantId', 'createdAt']>({
+      keys: ['tenantId', 'createdAt'],
+    });
+    const b = { tenantId: 'b', createdAt: 1, value: 'b' };
+    const a = { tenantId: 'a', createdAt: 2, value: 'a' };
+    const tail = { value: 'initial' };
+    buffer.add([b, a]);
+    buffer.addKeyed(['a', 1], { value: 'earlier' });
+    buffer.addKeyed(['a', 2], tail);
+    buffer.add([a]);
+    tail.value = 'updated';
+
+    const rows = buffer.drain();
+    expect(rows).toEqual([
+      { tenantId: 'a', createdAt: 1, value: 'earlier' },
+      a,
+      { tenantId: 'a', createdAt: 2, value: 'updated' },
+      a,
+      b,
+    ]);
+    expect(rows[1]).toBe(a);
+    expect(rows[3]).toBe(a);
+    expect(rows[4]).toBe(b);
+    expect(tail).toEqual({ value: 'updated' });
+  });
+
   it('supports a comparator for a non-scalar key', () => {
     type DateRow = { occurredAt: Date; value: string };
     const buffer = new KeyedSortBuffer<DateRow, ['occurredAt']>({
@@ -83,6 +135,69 @@ describe(KeyedSortBuffer.name, () => {
       { occurredAt: earlier, value: 'earlier' },
       { occurredAt: later, value: 'later' },
     ]);
+  });
+
+  it.each(['throw', 'NaN', 'Infinity'])(
+    'retains all rows when a comparator fails with %s after visiting another branch',
+    (failure) => {
+      let shouldFail = true;
+      const buffer = new KeyedSortBuffer<EventRow, ['tenantId', 'createdAt']>({
+        keys: ['tenantId', 'createdAt'],
+        comparators: [undefined, (left, right) => {
+          if (shouldFail) {
+            if (failure === 'throw') throw new Error('comparator failed');
+            return Number(failure);
+          }
+          return left - right;
+        }],
+      });
+      const first = { tenantId: 'a', createdAt: 0, value: 'first branch' };
+      const last = { tenantId: 'b', createdAt: 2, value: 'last' };
+      buffer.add([first, last]);
+      buffer.addKeyed(['b', 1], { value: 'middle' });
+
+      expect(() => buffer.drain()).toThrow(
+        failure === 'throw' ? 'comparator failed' : 'must return a finite number',
+      );
+      expect(buffer.size).toBe(3);
+      expect(() => buffer.drain()).toThrow();
+      expect(buffer.size).toBe(3);
+
+      shouldFail = false;
+      const rows = buffer.drain();
+      expect(rows).toEqual([
+        first,
+        { tenantId: 'b', createdAt: 1, value: 'middle' },
+        last,
+      ]);
+      expect(rows[0]).toBe(first);
+      expect(rows[2]).toBe(last);
+      expect(buffer.size).toBe(0);
+      expect(buffer.drain()).toEqual([]);
+      buffer.add([first]);
+      expect(buffer.drain()).toEqual([first]);
+    },
+  );
+
+  it('retains rows when materializing a keyed tail throws', () => {
+    const buffer = new KeyedSortBuffer<EventRow, ['tenantId', 'createdAt']>({
+      keys: ['tenantId', 'createdAt'],
+    });
+    let shouldFail = true;
+    buffer.addKeyed(['a', 1], {
+      get value() {
+        if (shouldFail) throw new Error('tail unavailable');
+        return 'recovered';
+      },
+    });
+
+    expect(() => buffer.drain()).toThrow('tail unavailable');
+    expect(buffer.size).toBe(1);
+    shouldFail = false;
+    expect(buffer.drain()).toEqual([
+      { tenantId: 'a', createdAt: 1, value: 'recovered' },
+    ]);
+    expect(buffer.size).toBe(0);
   });
 
   it('rejects unsupported default keys before storing the tail', () => {

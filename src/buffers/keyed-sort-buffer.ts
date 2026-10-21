@@ -42,9 +42,17 @@ type BufferNode<Tail extends object> = Map<
   BufferNode<Tail> | Tail[]
 >;
 
+class KeyedTail<Tail extends object> {
+  constructor(readonly tail: Tail) {}
+}
+
+type BufferedRow<T extends object, K extends KeyNames<T>> =
+  | T
+  | KeyedTail<KeyedSortBufferTail<T, K>>;
+
 type DefaultKeyType = 'string' | 'number' | 'bigint' | 'boolean';
 
-/** Groups rows by sorting keys and materializes complete rows on drain. */
+/** Groups rows by sorting keys, retaining complete rows by reference. */
 export class KeyedSortBuffer<
   T extends object,
   const K extends KeyNames<T>,
@@ -54,7 +62,7 @@ export class KeyedSortBuffer<
   private readonly comparators: ReadonlyArray<
     KeyComparator<unknown> | undefined
   >;
-  private root: BufferNode<KeyedSortBufferTail<T, K>> = new Map();
+  private root: BufferNode<BufferedRow<T, K>> = new Map();
   private defaultKeyTypes: Array<DefaultKeyType | undefined>;
   private readonly listeners = new Set<() => void>();
   private rowCount = 0;
@@ -85,9 +93,7 @@ export class KeyedSortBuffer<
 
     for (const row of rows) {
       const keys = this.keys.map((key) => row[key]);
-      const tail = { ...row } as Record<string, unknown>;
-      for (const key of this.keys) delete tail[key];
-      this.store(keys, tail as KeyedSortBufferTail<T, K>);
+      this.store(keys, row);
     }
 
     for (const listener of this.listeners) listener();
@@ -97,7 +103,7 @@ export class KeyedSortBuffer<
     keys: KeyedSortBufferKeyValues<T, K>,
     tail: KeyedSortBufferTail<T, K>,
   ): void {
-    this.store(keys, tail);
+    this.store(keys, new KeyedTail(tail));
     for (const listener of this.listeners) listener();
   }
 
@@ -106,10 +112,6 @@ export class KeyedSortBuffer<
 
     const root = this.root;
     const rowCount = this.rowCount;
-    this.root = new Map();
-    this.defaultKeyTypes = new Array(this.keys.length);
-    this.rowCount = 0;
-
     const rows: T[] = [];
     const keys: unknown[] = new Array(this.keys.length);
     this.drainNode(root, 0, keys, rows);
@@ -117,6 +119,9 @@ export class KeyedSortBuffer<
     if (rows.length !== rowCount) {
       throw new Error('KeyedSortBuffer internal row count mismatch');
     }
+    this.root = new Map();
+    this.defaultKeyTypes = new Array(this.keys.length);
+    this.rowCount = 0;
     return rows;
   }
 
@@ -127,7 +132,7 @@ export class KeyedSortBuffer<
 
   private store(
     keys: readonly unknown[],
-    tail: KeyedSortBufferTail<T, K>,
+    row: BufferedRow<T, K>,
   ): void {
     if (keys.length !== this.keys.length) {
       throw new RangeError(
@@ -172,9 +177,9 @@ export class KeyedSortBuffer<
           if (!Array.isArray(child)) {
             throw new Error('KeyedSortBuffer contains an invalid leaf');
           }
-          child.push(tail);
+          child.push(row);
         } else {
-          node.set(key, [tail]);
+          node.set(key, [row]);
         }
         continue;
       }
@@ -185,7 +190,7 @@ export class KeyedSortBuffer<
         }
         node = child;
       } else {
-        const branch: BufferNode<KeyedSortBufferTail<T, K>> = new Map();
+        const branch: BufferNode<BufferedRow<T, K>> = new Map();
         node.set(key, branch);
         node = branch;
       }
@@ -195,7 +200,7 @@ export class KeyedSortBuffer<
   }
 
   private drainNode(
-    node: BufferNode<KeyedSortBufferTail<T, K>>,
+    node: BufferNode<BufferedRow<T, K>>,
     depth: number,
     keys: unknown[],
     rows: T[],
@@ -207,12 +212,16 @@ export class KeyedSortBuffer<
     for (const [key, child] of entries) {
       keys[depth] = key;
       if (Array.isArray(child)) {
-        for (const tail of child) {
-          const row = { ...tail } as Record<string, unknown>;
-          for (let index = 0; index < this.keys.length; index += 1) {
-            row[this.keys[index]!] = keys[index];
+        for (const entry of child) {
+          if (entry instanceof KeyedTail) {
+            const row = { ...entry.tail } as Record<string, unknown>;
+            for (let index = 0; index < this.keys.length; index += 1) {
+              row[this.keys[index]!] = keys[index];
+            }
+            rows.push(row as T);
+          } else {
+            rows.push(entry);
           }
-          rows.push(row as T);
         }
       } else {
         this.drainNode(child, depth + 1, keys, rows);

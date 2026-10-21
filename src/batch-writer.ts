@@ -76,6 +76,8 @@ export class ClickHouseBatchWriter<T extends object> {
   private readonly metrics?: ClickHouseBatchWriterMetrics;
 
   private deliveryQueue: Batch[] = [];
+  private queuedRowCount = 0;
+  private bufferedRowCount = 0;
   private readonly unsubscribeBuffer: () => void;
   private flushTimer?: NodeJS.Timeout;
   private delivery?: {
@@ -127,12 +129,20 @@ export class ClickHouseBatchWriter<T extends object> {
     }
 
     this.metrics?.writerConfigured(this.maxBatchSize);
+    this.bufferedRowCount = this.buffer.size;
+    if (this.bufferedRowCount > 0) {
+      this.bufferedRowsAcceptedAt = performance.now();
+      this.metrics?.rowsAccepted(this.bufferedRowCount);
+    }
 
     this.unsubscribeBuffer = this.buffer.subscribe(() => {
       if (this.closed) return;
+      const addedRowCount = this.buffer.size - this.bufferedRowCount;
+      this.bufferedRowCount = this.buffer.size;
       if (this.buffer.size > 0 && this.bufferedRowsAcceptedAt === undefined) {
         this.bufferedRowsAcceptedAt = performance.now();
       }
+      if (addedRowCount > 0) this.metrics?.rowsAccepted(addedRowCount);
       this.metrics?.queueChanged(
         this.remainingRowCount,
         this.remainingBatchCount,
@@ -161,13 +171,7 @@ export class ClickHouseBatchWriter<T extends object> {
 
   write(rows: readonly T[]): void {
     if (this.closed || rows.length === 0) return;
-    const wasEmpty = this.buffer.size === 0;
     this.buffer.add(rows);
-    if (wasEmpty && this.buffer.size > 0) {
-      this.bufferedRowsAcceptedAt = performance.now();
-    }
-    this.metrics?.rowsAccepted(rows.length);
-    this.metrics?.queueChanged(this.remainingRowCount, this.remainingBatchCount);
   }
 
   async flush(): Promise<void> {
@@ -207,6 +211,7 @@ export class ClickHouseBatchWriter<T extends object> {
   private queueNextBatch(): void {
     if (this.buffer.size === 0) return;
     const rows = this.buffer.drain();
+    this.bufferedRowCount = 0;
     if (rows.length === 0) return;
     const acceptedAt = this.bufferedRowsAcceptedAt ?? performance.now();
     this.bufferedRowsAcceptedAt = undefined;
@@ -218,6 +223,7 @@ export class ClickHouseBatchWriter<T extends object> {
         attempts: 0,
         acceptedAt,
       });
+      this.queuedRowCount += rows.length;
     } finally {
       this.metrics?.queueChanged(
         this.remainingRowCount,
@@ -273,6 +279,7 @@ export class ClickHouseBatchWriter<T extends object> {
       }
 
       this.deliveryQueue.shift();
+      this.queuedRowCount -= batch.rowCount;
       this.metrics?.batchInserted(
         batch.rowCount,
         (performance.now() - insertStartedAt) / 1_000,
@@ -327,10 +334,7 @@ export class ClickHouseBatchWriter<T extends object> {
   }
 
   private get remainingRowCount(): number {
-    return (
-      this.buffer.size +
-      this.deliveryQueue.reduce((sum, batch) => sum + batch.rowCount, 0)
-    );
+    return this.buffer.size + this.queuedRowCount;
   }
 
   private get remainingBatchCount(): number {

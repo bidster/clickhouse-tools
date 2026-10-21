@@ -1,0 +1,762 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Delivery, queue, retry, batch size, and latency metrics for @bidster/clickhouse-tools batch writers.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Rows successfully inserted per second.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "rows/s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(${metric_prefix}clickhouse_batch_writer_rows_inserted_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "instant": false,
+          "legendFormat": "inserted",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Inserted rows",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Rows accepted by write() per second.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          },
+          "unit": "rows/s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(${metric_prefix}clickhouse_batch_writer_rows_accepted_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "accepted",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Accepted rows",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Rows still buffered, in flight, or waiting for retry.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          },
+          "unit": "rows"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(${metric_prefix}clickhouse_batch_writer_queue_rows{writer=~\"$writer\", table=~\"$table\"})",
+          "legendFormat": "queued",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Queued rows",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of insert attempts that failed over the selected rate interval.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "100 * sum(rate(${metric_prefix}clickhouse_batch_writer_insert_errors_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])) / clamp_min(sum(rate(${metric_prefix}clickhouse_batch_writer_insert_attempts_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])), 1e-12)",
+          "legendFormat": "errors",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Insert error ratio",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Accepted and successfully inserted row throughput per writer.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "rows/s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_rows_accepted_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} → {{table}} accepted",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_rows_inserted_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} → {{table}} inserted",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Row throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current partial buffer, encoded batches, in-flight inserts, and batches waiting for retry.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "/rows$/" },
+            "properties": [{ "id": "unit", "value": "rows" }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "/batches$/" },
+            "properties": [{ "id": "unit", "value": "none" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (${metric_prefix}clickhouse_batch_writer_queue_rows{writer=~\"$writer\", table=~\"$table\"})",
+          "legendFormat": "{{writer}} → {{table}} rows",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (${metric_prefix}clickhouse_batch_writer_queue_batches{writer=~\"$writer\", table=~\"$table\"})",
+          "legendFormat": "{{writer}} → {{table}} batches",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Delivery queue",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Insert request duration. Retry backoff is excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_insert_duration_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p50",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_insert_duration_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p95",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_insert_duration_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p99",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Insert duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Time from the oldest accepted row in a batch until successful insertion, including buffering, waiting, backoff, and retries.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_delivery_latency_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p50",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_delivery_latency_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p95",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_delivery_latency_seconds_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p99",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "End-to-end delivery latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Insert attempts, failed attempts, retries, and successful batches per second.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_insert_attempts_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} attempts",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_insert_errors_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} errors",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_retries_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} retries",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batches_succeeded_total{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval]))",
+          "legendFormat": "{{writer}} succeeded",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Insert attempts and outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Absolute rows per successfully inserted batch.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "rows"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 20 },
+      "id": 10,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_size_rows_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p50",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_size_rows_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p95",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_size_rows_sum{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])) / clamp_min(sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_size_rows_count{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])), 1e-12)",
+          "legendFormat": "{{writer}} mean",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Successful batch size",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Successful batch size divided by maxBatchSize. Values above 100% are possible because maxBatchSize is a flush threshold, not a hard limit.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 20 },
+      "id": 12,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_fill_ratio_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p50",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_fill_ratio_bucket{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])))",
+          "legendFormat": "{{writer}} p95",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_fill_ratio_sum{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])) / clamp_min(sum by (writer, table) (rate(${metric_prefix}clickhouse_batch_writer_batch_fill_ratio_count{writer=~\"$writer\", table=~\"$table\"}[$__rate_interval])), 1e-12)",
+          "legendFormat": "{{writer}} mean",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Batch fill ratio",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current queue state grouped by writer and destination table.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 28 },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (${metric_prefix}clickhouse_batch_writer_queue_rows{writer=~\"$writer\", table=~\"$table\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "rows",
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (writer, table) (${metric_prefix}clickhouse_batch_writer_queue_batches{writer=~\"$writer\", table=~\"$table\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "batches",
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "max by (writer, table) (${metric_prefix}clickhouse_batch_writer_max_batch_size_rows{writer=~\"$writer\", table=~\"$table\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "max batch size",
+          "refId": "C"
+        }
+      ],
+      "title": "Current writer queues",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "indexByName": { "writer": 0, "table": 1, "Value #A": 2, "Value #B": 3, "Value #C": 4 },
+            "renameByName": { "Value #A": "Queued rows", "Value #B": "Queued batches", "Value #C": "Max batch size", "table": "Table", "writer": "Writer" }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["clickhouse", "batch-writer", "prometheus"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": true, "text": "", "value": "" },
+        "description": "Exact metric prefix from the Nest module configuration, including a trailing underscore. Leave empty when prefix is not configured.",
+        "hide": 0,
+        "label": "Metric prefix",
+        "name": "metric_prefix",
+        "options": [{ "selected": true, "text": "", "value": "" }],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(${metric_prefix}clickhouse_batch_writer_queue_rows, writer)",
+        "includeAll": true,
+        "label": "Writer",
+        "multi": true,
+        "name": "writer",
+        "options": [],
+        "query": { "query": "label_values(${metric_prefix}clickhouse_batch_writer_queue_rows, writer)", "refId": "PrometheusVariableQueryEditor-Writer" },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(${metric_prefix}clickhouse_batch_writer_queue_rows{writer=~\"$writer\"}, table)",
+        "includeAll": true,
+        "label": "Table",
+        "multi": true,
+        "name": "table",
+        "options": [],
+        "query": { "query": "label_values(${metric_prefix}clickhouse_batch_writer_queue_rows{writer=~\"$writer\"}, table)", "refId": "PrometheusVariableQueryEditor-Table" },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "ClickHouse Batch Writers",
+  "uid": "clickhouse-batch-writers",
+  "version": 1,
+  "weekStart": ""
+}

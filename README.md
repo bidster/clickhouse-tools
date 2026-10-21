@@ -80,6 +80,11 @@ the common `size`, `add`, `drain`, and `subscribe` contract. A buffer must have
 only one active consumer because `drain()` removes its complete current
 contents.
 
+`KeyedSortBuffer` retains complete rows passed to `add()` by reference and returns
+those same objects from `drain()`, sorted by the configured keys. Do not mutate
+rows, including sorting keys, after adding them and before the writer has finished
+sending them. `addKeyed()` retains the tail and materializes a complete row on drain.
+
 `KeyedSortBuffer` groups rows in nested maps by configured sorting columns. An
 application can pass complete rows through `writer.write()` or avoid creating a
 complete row by passing its sorting-key values and unsorted tail separately:
@@ -103,8 +108,11 @@ sortedEventBuffer.addKeyed(["event-1", "2026-08-11 10:00:00.000"], {
 });
 ```
 
-Leaves store only tails; `drain()` sorts every key level and materializes the
-complete rows. Rows with equal keys retain their insertion order. The default
+Leaves store complete row references from `add()` and wrapped tails from
+`addKeyed()`. `drain()` sorts every key level, returns the complete rows by
+reference, and materializes rows only for keyed tails. If sorting or
+materialization fails, the buffer retains its rows for another drain attempt.
+Rows with equal keys retain their insertion order. The default
 ascending comparator supports strings, finite numbers, bigints, and booleans.
 Other types require a comparator in the corresponding `comparators` tuple. A
 custom comparator is also how an application defines descending or
@@ -310,6 +318,12 @@ Metric collectors are reused from the supplied `prom-client` registry, so
 multiple writer modules using the same prefix do not register them twice.
 Queue gauges include a non-empty partial buffer and an in-flight batch, and
 decrease only after ClickHouse has acknowledged the insert.
+
+An importable Grafana dashboard is available at
+[`grafana/clickhouse-batch-writers.json`](grafana/clickhouse-batch-writers.json).
+Select the Prometheus datasource after import. Set its `Metric prefix` text
+variable to the exact configured prefix, including the trailing underscore, or
+leave it empty when the module has no prefix.
 
 On insert failure, the batch remains at the head of the delivery queue. The
 single delivery loop waits and retries it, preserving strict FIFO order. Its

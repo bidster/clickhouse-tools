@@ -44,6 +44,7 @@ type ServiceOptions = Partial<
     | 'maxBatchSize'
     | 'maxRetryDelayMs'
     | 'shutdownTimeoutMs'
+    | 'metrics'
   >
 >;
 
