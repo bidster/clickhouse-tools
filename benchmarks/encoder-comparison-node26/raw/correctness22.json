@@ -1,0 +1,216 @@
+{
+  "runtime": {
+    "node": "v22.22.0",
+    "v8": "12.4.254.21-node.33",
+    "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+  },
+  "passed": true,
+  "scenarioCount": 6,
+  "extraEdgeCases": 6,
+  "datasets": {
+    "small": {
+      "allInputStringsAscii": true,
+      "inputDataLength": {
+        "min": 16,
+        "max": 64
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 136897,
+          "chars": 136897,
+          "sha256": "f7d7e62dd1ca07a6db30a97297306048fc7b671df7d3f1c7df22c6d7fedf843c"
+        },
+        "unescaped22": {
+          "bytes": 136897,
+          "chars": 136897,
+          "sha256": "f7d7e62dd1ca07a6db30a97297306048fc7b671df7d3f1c7df22c6d7fedf843c"
+        },
+        "prepared22": {
+          "bytes": 136897,
+          "chars": 136897,
+          "sha256": "f7d7e62dd1ca07a6db30a97297306048fc7b671df7d3f1c7df22c6d7fedf843c"
+        },
+        "json22": {
+          "bytes": 150897,
+          "chars": 150897,
+          "sha256": "898740465b699ae05fda995ab314a77e787fe8611c846a1461fabcebe292e8ba"
+        },
+        "json26": {
+          "bytes": 150897,
+          "chars": 150897,
+          "sha256": "898740465b699ae05fda995ab314a77e787fe8611c846a1461fabcebe292e8ba"
+        }
+      }
+    },
+    "json256": {
+      "allInputStringsAscii": true,
+      "inputDataLength": {
+        "min": 248,
+        "max": 251
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 347977,
+          "chars": 347977,
+          "sha256": "025d3ed97067d1d808f7331e219e5b5355f35a073dbf6b1895048a584167ecd5"
+        },
+        "unescaped22": {
+          "bytes": 347977,
+          "chars": 347977,
+          "sha256": "025d3ed97067d1d808f7331e219e5b5355f35a073dbf6b1895048a584167ecd5"
+        },
+        "prepared22": {
+          "bytes": 347977,
+          "chars": 347977,
+          "sha256": "025d3ed97067d1d808f7331e219e5b5355f35a073dbf6b1895048a584167ecd5"
+        },
+        "json22": {
+          "bytes": 377977,
+          "chars": 377977,
+          "sha256": "96b0cbaea78c2a33f5d02d6a60d9d318e70c84bde43fa28b4f87b53e0c7c8ff1"
+        },
+        "json26": {
+          "bytes": 377977,
+          "chars": 377977,
+          "sha256": "96b0cbaea78c2a33f5d02d6a60d9d318e70c84bde43fa28b4f87b53e0c7c8ff1"
+        }
+      }
+    },
+    "escaped": {
+      "allInputStringsAscii": true,
+      "inputDataLength": {
+        "min": 250,
+        "max": 260
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 381637,
+          "chars": 381637,
+          "sha256": "30870e0fb5461f609e89008d0ca434cdf947115b51fb66dd2251edeed1405a45"
+        },
+        "unescaped22": {
+          "bytes": 381637,
+          "chars": 381637,
+          "sha256": "30870e0fb5461f609e89008d0ca434cdf947115b51fb66dd2251edeed1405a45"
+        },
+        "prepared22": {
+          "bytes": 381637,
+          "chars": 381637,
+          "sha256": "30870e0fb5461f609e89008d0ca434cdf947115b51fb66dd2251edeed1405a45"
+        },
+        "json22": {
+          "bytes": 405637,
+          "chars": 405637,
+          "sha256": "63e37acc4a9a1817867eeb47ca4ff98ffa549c51a2a234420b6efb2e928b5d35"
+        },
+        "json26": {
+          "bytes": 405637,
+          "chars": 405637,
+          "sha256": "63e37acc4a9a1817867eeb47ca4ff98ffa549c51a2a234420b6efb2e928b5d35"
+        }
+      }
+    },
+    "unicode": {
+      "allInputStringsAscii": false,
+      "inputDataLength": {
+        "min": 224,
+        "max": 232
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 496747,
+          "chars": 328747,
+          "sha256": "87ac1c951954ea7820237739f656a654e011955fdbfe54f88926b7e851b7e20d"
+        },
+        "unescaped22": {
+          "bytes": 496747,
+          "chars": 328747,
+          "sha256": "87ac1c951954ea7820237739f656a654e011955fdbfe54f88926b7e851b7e20d"
+        },
+        "prepared22": {
+          "bytes": 496747,
+          "chars": 328747,
+          "sha256": "87ac1c951954ea7820237739f656a654e011955fdbfe54f88926b7e851b7e20d"
+        },
+        "json22": {
+          "bytes": 510747,
+          "chars": 342747,
+          "sha256": "4c7541dbe2655085ee6bfac07e040d7347cf74aec02bcac9d02d92685e58cf35"
+        },
+        "json26": {
+          "bytes": 510747,
+          "chars": 342747,
+          "sha256": "4c7541dbe2655085ee6bfac07e040d7347cf74aec02bcac9d02d92685e58cf35"
+        }
+      }
+    },
+    "large": {
+      "allInputStringsAscii": true,
+      "inputDataLength": {
+        "min": 3042,
+        "max": 3044
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "ff0826c72215af23444376e4ee6c17a99a4e9e6645eae35c3d3e93a57122a8cb"
+        },
+        "unescaped22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "ff0826c72215af23444376e4ee6c17a99a4e9e6645eae35c3d3e93a57122a8cb"
+        },
+        "prepared22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "ff0826c72215af23444376e4ee6c17a99a4e9e6645eae35c3d3e93a57122a8cb"
+        },
+        "json22": {
+          "bytes": 3165077,
+          "chars": 3165077,
+          "sha256": "200089404e3f36fdf458f4ecc5763bcfe783a05ae04ad476f73c5232b27a1c02"
+        },
+        "json26": {
+          "bytes": 3165077,
+          "chars": 3165077,
+          "sha256": "200089404e3f36fdf458f4ecc5763bcfe783a05ae04ad476f73c5232b27a1c02"
+        }
+      }
+    },
+    "ascii": {
+      "allInputStringsAscii": true,
+      "inputDataLength": {
+        "min": 3042,
+        "max": 3044
+      },
+      "outputs": {
+        "tsv22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "6a8a3137aea21343b6f68e29a754f72f24b96b5969f048b68f465f0c0d41d15d"
+        },
+        "unescaped22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "6a8a3137aea21343b6f68e29a754f72f24b96b5969f048b68f465f0c0d41d15d"
+        },
+        "prepared22": {
+          "bytes": 3141077,
+          "chars": 3141077,
+          "sha256": "6a8a3137aea21343b6f68e29a754f72f24b96b5969f048b68f465f0c0d41d15d"
+        },
+        "json22": {
+          "bytes": 3155077,
+          "chars": 3155077,
+          "sha256": "e82c019ddf147d3d76ece5ff61860b39b36617287030ad44eeccd7cd4b228bb8"
+        },
+        "json26": {
+          "bytes": 3155077,
+          "chars": 3155077,
+          "sha256": "e82c019ddf147d3d76ece5ff61860b39b36617287030ad44eeccd7cd4b228bb8"
+        }
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type Exec,
@@ -30,7 +31,7 @@ describe('ClickHouseBatchWriter shutdown', () => {
     const exec = vi
       .fn<Exec>()
       .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValue(undefined);
+      .mockImplementation(async () => ({ stream: Readable.from([]) }));
     const service = createService(exec, {
       flushIntervalMs: 100,
       shutdownTimeoutMs: 1_000,

@@ -6,11 +6,14 @@ export {
   type ClickHouseToolsLogger,
 } from './batch-writer.js';
 export {
-  ClickHouseTsvRowEncoder,
+  TsvRowEncoder,
   rawTsv,
   type ClickHouseRawTsvValue,
   type ClickHouseTsvValue,
 } from './encoders/tsv-row-encoder.js';
+export { CommaSeparatedJsonCompactEachRowEncoder } from './encoders/comma-separated-json-compact-each-row-encoder.js';
+export { UnescapedTsvRowEncoder } from './encoders/unescaped-tsv-row-encoder.js';
+export { escapeTsvString } from './encoders/escape-tsv-string.js';
 export {
   type ClickHouseRowEncoder,
   type ClickHouseTextInsertFormat,

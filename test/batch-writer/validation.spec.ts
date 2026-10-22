@@ -72,7 +72,7 @@ describe('ClickHouseBatchWriter validation', () => {
       () =>
         new ClickHouseBatchWriter<EventRow>({
           client: {
-            insert: createSuccessfulExec(),
+            exec: createSuccessfulExec(),
           } as unknown as ClickHouseClient,
           insert: {
             table: 'custom_events',
@@ -86,7 +86,7 @@ describe('ClickHouseBatchWriter validation', () => {
     const insertedBodies: string[] = [];
     const exec = createSuccessfulExec(insertedBodies);
     const service = new ClickHouseBatchWriter<VerboseRow>({
-      client: { insert: exec } as unknown as ClickHouseClient,
+      client: { exec } as unknown as ClickHouseClient,
       insert: {
         table: 'verbose_logs',
         columns: [

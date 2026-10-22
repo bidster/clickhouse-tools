@@ -11,11 +11,7 @@ business rules.
 npm install @bidster/clickhouse-tools @clickhouse/client@^1.24.1
 ```
 
-`@clickhouse/client` is a required peer dependency. The application selects a
-compatible version (`^1.24.1`) used by both the application and this library.
-Version 1.24.1 includes the fix for queued request cancellation with keep-alive.
-
-NestJS support is optional. Install the Nest peer dependencies only when using
+`@clickhouse/client` is a required peer dependency. NestJS support is optional. Install the Nest peer dependencies only when using
 the `/nest` entry point.
 
 ## Vanilla TypeScript
@@ -122,18 +118,157 @@ ClickHouse-specific ordering.
 from trusted application configuration, not from user input.
 Optional `insert.clickhouse_settings` are passed to every ClickHouse insert
 request. They override client-level ClickHouse settings for that request.
-The default TSV encoder handles strings, finite numbers, bigints, booleans, and
-`null` (`\\N`). Strings receive TSV escaping; numbers, bigints, and booleans use
-their string representation. Dates and schema-dependent values such as maps,
-arrays, tuples, and objects must be formatted by the caller. Wrap their final
-ClickHouse representation in `rawTsv()` to prevent additional escaping.
 
-`ClickHouseBatchWriter` consumes the configured row buffer and owns encoding,
-queueing, retries, and delivery. It uses
-`ClickHouseTsvRowEncoder` with the `TabSeparated` format by default. A custom
-`rowEncoder` owns both its text format and batch serialization while retaining
-the same batching and retry behavior. JSON and binary formats are intentionally
-outside this string-body encoder contract.
+`ClickHouseBatchWriter` owns buffering, encoding, retries, and delivery.
+Choose an encoder through `rowEncoder`; batching and retry behavior stay the same.
+
+### Choosing an encoder
+
+- **Start with `TsvRowEncoder`.** This is the general-purpose default: it
+  automatically escapes strings and works well for most workloads, including
+  arbitrary user text. It supports strings, finite numbers, `bigint`, booleans,
+  `null`, and `rawTsv` for preformatted ClickHouse values. Choose it when you
+  want minimal manual preparation and few special rules for individual fields.
+
+- **Choose `UnescapedTsvRowEncoder` when you control data preparation and want
+  to reduce serialization overhead.** UUIDs, formatted dates, and codes can be
+  passed directly if their format guarantees no TSV special characters.
+  Escape arbitrary text once with `escapeTsvString`. The encoder passes strings
+  through without checking for special characters or escaping them again.
+  This is especially useful when values are already prepared or serialization
+  limits application throughput. If preparation happens immediately before
+  writing, include its cost in your comparison. It supports the same scalar
+  types as `TsvRowEncoder`, but does not accept `rawTsv` wrappers.
+
+- **Try `CommaSeparatedJsonCompactEachRowEncoder` when you want automatic
+  escaping and fast batch serialization.** It uses one `JSON.stringify` for
+  the whole batch and supports strings, finite numbers, booleans, and `null`,
+  but not `bigint` or `rawTsv`. JSON stored inside a string field stays a
+  string. On Node.js 26, plain ASCII text without quotes, backslashes, or
+  control characters that require JSON escaping can perform particularly
+  well. Results also depend on how strings are created and on batch size;
+  ASCII content alone does not guarantee an advantage.
+
+**When choosing for performance, measure the full path you need:** value
+preparation, encoding, and delivery. The benchmarks below measure serialization;
+overall throughput also depends on compression, the network, and ClickHouse
+processing.
+
+| Encoder | What it does | When to choose it |
+| --- | --- | --- |
+| `TsvRowEncoder` **(default)** | Writes TSV and automatically escapes every string. | General use, especially arbitrary text. No manual string preparation is needed. |
+| `UnescapedTsvRowEncoder` | Writes TSV with strings exactly as supplied. | You control the input: most fields are UUIDs, formatted dates, or codes, and only a few text fields need escaping. |
+| `CommaSeparatedJsonCompactEachRowEncoder` | Writes `JSONCompactEachRow` using one `JSON.stringify` for the whole batch. | Your rows contain JSON-compatible scalar values and you want automatic escaping with batch-level JSON serialization. |
+
+The default TSV encoder avoids unnecessary replacement work for short strings
+that have no special characters. The unescaped encoder skips even that check;
+you decide which fields need `escapeTsvString`. The JSON encoder handles string
+escaping through JSON serialization and keeps rows comma-separated.
+
+All three accept strings, finite numbers, booleans, and `null`. Both TSV encoders
+also accept `bigint`; only the default TSV encoder accepts `rawTsv()` wrappers
+for preformatted ClickHouse values. JSON stored in a string stays a string.
+Dates, arrays, and other objects must be formatted by the caller. Unsupported
+values, including `undefined` and non-finite numbers, throw an error. Empty
+batches produce an empty string.
+
+All encoders take an ordered column list. Use the same order in `insert.columns`
+and the encoder constructor. Omit `rowEncoder` to use the default.
+
+```ts
+import {
+  ClickHouseBatchWriter,
+  CommaSeparatedJsonCompactEachRowEncoder,
+  UnescapedTsvRowEncoder,
+  escapeTsvString,
+} from "@bidster/clickhouse-tools";
+
+type EventRow = { id: string; created_at: string; type: string; data: string };
+const columns = ["id", "created_at", "type", "data"] as const;
+
+// JSON: pass ordinary strings, including arbitrary text.
+const jsonEvents = new ClickHouseBatchWriter<EventRow>({
+  client,
+  insert: { table: "events", columns },
+  rowEncoder: new CommaSeparatedJsonCompactEachRowEncoder<EventRow>(columns),
+});
+jsonEvents.write([
+  {
+    id: "event-1",
+    created_at: "2026-08-11 10:00:00.000",
+    type: "session.start",
+    data: '{"source":"api"}',
+  },
+]);
+await jsonEvents.close();
+
+// Unescaped TSV: these IDs, dates, and codes need no escaping.
+// Prepare the arbitrary text field explicitly.
+const tsvEvents = new ClickHouseBatchWriter<EventRow>({
+  client,
+  insert: { table: "events", columns },
+  rowEncoder: new UnescapedTsvRowEncoder<EventRow>(columns),
+});
+tsvEvents.write([
+  {
+    id: "event-1",
+    created_at: "2026-08-11 10:00:00.000",
+    type: "session.start",
+    data: escapeTsvString("text\twith tabs\nand newlines"),
+  },
+]);
+await tsvEvents.close();
+```
+
+With `UnescapedTsvRowEncoder`, the caller is responsible for string preparation:
+
+- Unescaped TAB, LF, CR, or backslash can change the structure or interpretation
+  of the data. `escapeTsvString` escapes these as `\t`, `\n`, `\r`, and `\\`.
+- Literal text `\N` must be escaped to distinguish it from the TSV null marker.
+- Call `escapeTsvString` once per value: it is not idempotent. Prepared strings
+  belong in `UnescapedTsvRowEncoder`; the default encoder escapes them again.
+
+**Encoder benchmark:** CPU milliseconds per batch of 1,000 rows, lower is better.
+Measured on Apple M4 Max with Node.js 22.22.0 and 26.12.1. All columns use the
+current encoders and the same nine-column event values. Percentages show the
+change in CPU time relative to `TsvRowEncoder` on Node.js 22 in the same row:
+negative means less CPU time, positive means more. They are calculated from
+unrounded measurements.
+
+![Encoder CPU comparison: shorter bars use less CPU; the dashed line marks TsvRowEncoder on Node.js 22 at 100%.](docs/benchmarks/encoder-comparison.svg)
+
+| `data` contents | `TsvRowEncoder`, Node 22 | `UnescapedTsvRowEncoder` + preparation, Node 22 | `UnescapedTsvRowEncoder`, prepared rows, Node 22 | `CommaSeparatedJsonCompactEachRowEncoder`, Node 22 | `CommaSeparatedJsonCompactEachRowEncoder`, Node 26 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Short text (16–64 characters) | 0.355 (baseline) | 0.302 (-14.9%) | 0.270 (-24.0%) | 0.251 (-29.2%) | 0.230 (-35.1%) |
+| JSON string (~256 characters) | 0.445 (baseline) | 0.389 (-12.5%) | 0.286 (-35.6%) | 0.357 (-19.8%) | 0.337 (-24.3%) |
+| Text with special characters | 1.121 (baseline) | 1.105 (-1.4%) | 0.312 (-72.2%) | 0.372 (-66.8%) | 0.394 (-64.9%) |
+| Unicode text | 0.543 (baseline) | 0.490 (-9.6%) | 0.366 (-32.6%) | 0.403 (-25.7%) | 0.448 (-17.5%) |
+| Large JSON string (~3 KB, ASCII) | 1.162 (baseline) | 1.032 (-11.2%) | 0.680 (-41.5%) | 1.643 (+41.3%) | 1.381 (+18.8%) |
+| Large plain ASCII text (~3 KB) | 1.026 (baseline) | 1.023 (-0.3%) | 0.590 (-42.5%) | 1.577 (+53.7%) | 1.325 (+29.2%) |
+| Same large ASCII values, parsed from JSON beforehand | 1.092 (baseline) | 1.017 (-6.9%) | 0.678 (-37.9%) | 1.679 (+53.8%) | 0.458 (-58.1%) |
+
+- **`UnescapedTsvRowEncoder` + preparation** includes `escapeTsvString(data)` and creating
+  the prepared rows. Other string fields contain no TSV special characters.
+- **`UnescapedTsvRowEncoder`, prepared rows** measures only `encode()`: strings are already
+  escaped before timing. Preparation still has a cost elsewhere in the application.
+- **`CommaSeparatedJsonCompactEachRowEncoder`** escapes quotes even when the
+  large JSON string contains only ASCII characters;
+  the plain ASCII text needs no JSON escaping.
+- The final row uses the same values loaded through `JSON.parse` before timing
+  for every encoder. That input preparation is excluded. Node.js 26 was fastest
+  in this case; ASCII content alone did not produce the same result. How strings
+  and rows are created can affect performance.
+
+Values are medians across five separate runs, or three for the final control.
+These measurements cover serialization, without network, compression, or
+ClickHouse inserts. Small differences may fall within run-to-run variation.
+[Benchmark method and full results](benchmarks/encoder-comparison-node26/RESULTS.md).
+
+Custom encoders implement `ClickHouseRowEncoder<T>`: a text `format` and
+`encode(rows): string`. Supported text formats include `JSONCompactEachRow`;
+binary formats are outside this contract.
+
+### Batching and delivery
 
 `maxBatchSize` is the threshold that triggers immediate draining; it is not a
 hard batch-size limit. `drain()` atomically removes every row currently in the
@@ -148,7 +283,9 @@ an encoding error is reported directly by `write()`, `flush()`, or `close()`;
 an automatic timer logs the error. Because the buffer has already been drained,
 an encoding error discards that extracted batch. Once encoding succeeds, the
 encoded body remains in the delivery queue, and only ClickHouse insert failures
-participate in retry behavior.
+participate in retry behavior, including errors while reading the response.
+A batch is counted as successful only after the response has been fully read;
+each retry reuses the same encoded body.
 
 `flush()` queues the current partial batch, restarts the timer, and waits until
 the delivery queue is empty. If ClickHouse is unavailable, it remains pending

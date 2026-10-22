@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClickHouseArrayRowBuffer } from '../../src/buffers/array-row-buffer.js';
 import { KeyedSortBuffer } from '../../src/buffers/keyed-sort-buffer.js';
@@ -112,7 +113,7 @@ describe('ClickHouseBatchWriter metrics', () => {
       .mockImplementationOnce(() => firstInsert.promise)
       .mockImplementationOnce(() => retryInsert.promise)
       .mockImplementationOnce(() => secondInsert.promise)
-      .mockResolvedValue(undefined);
+      .mockImplementation(async () => ({ stream: Readable.from([]) }));
     const service = createService(exec, { metrics, maxBatchSize: 2, flushIntervalMs: 100 });
 
     service.write([row(0), row(1)]);
@@ -128,12 +129,12 @@ describe('ClickHouseBatchWriter metrics', () => {
     expect(metrics.insertAttempt).toHaveBeenLastCalledWith(true);
     expect(metrics.queueChanged).toHaveBeenLastCalledWith(6, 3);
 
-    retryInsert.resolve(undefined);
+    retryInsert.resolve({ stream: Readable.from([]) });
     await vi.advanceTimersByTimeAsync(0);
     expect(exec).toHaveBeenCalledTimes(3);
     expect(metrics.queueChanged).toHaveBeenLastCalledWith(4, 2);
 
-    secondInsert.resolve(undefined);
+    secondInsert.resolve({ stream: Readable.from([]) });
     await service.flush();
     expect(metrics.queueChanged).toHaveBeenCalledWith(1, 1);
     expect(metrics.queueChanged).toHaveBeenLastCalledWith(0, 0);

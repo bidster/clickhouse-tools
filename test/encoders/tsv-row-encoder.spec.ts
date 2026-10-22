@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ClickHouseTsvRowEncoder,
+  TsvRowEncoder,
   rawTsv,
   type ClickHouseRawTsvValue,
 } from '../../src/encoders/tsv-row-encoder.js';
@@ -14,9 +14,9 @@ type Row = {
   raw: ClickHouseRawTsvValue;
 };
 
-describe(ClickHouseTsvRowEncoder.name, () => {
+describe(TsvRowEncoder.name, () => {
   it('encodes columns in their declared order', () => {
-    const encoder = new ClickHouseTsvRowEncoder<Pick<Row, 'scalar' | 'nullable'>>([
+    const encoder = new TsvRowEncoder<Pick<Row, 'scalar' | 'nullable'>>([
       'nullable',
       'scalar',
     ]);
@@ -27,7 +27,7 @@ describe(ClickHouseTsvRowEncoder.name, () => {
   });
 
   it('encodes scalar values and passes raw TSV through unchanged', () => {
-    const encoder = new ClickHouseTsvRowEncoder<Row>([
+    const encoder = new TsvRowEncoder<Row>([
       'scalar',
       'nullable',
       'integer',
@@ -66,7 +66,7 @@ describe(ClickHouseTsvRowEncoder.name, () => {
     ['Array', []],
     ['Object', { value: 'nested' }],
   ])('rejects %s values that require external formatting', (name, value) => {
-    const encoder = new ClickHouseTsvRowEncoder<{ value: unknown }>(['value']);
+    const encoder = new TsvRowEncoder<{ value: unknown }>(['value']);
 
     expect(() => encoder.encode([{ value }])).toThrow(
       `${name} values must be formatted before ClickHouseBatchWriter.write()`,
@@ -76,7 +76,7 @@ describe(ClickHouseTsvRowEncoder.name, () => {
   it.each([NaN, Infinity, -Infinity])(
     'rejects the non-finite number %s',
     (value) => {
-      const encoder = new ClickHouseTsvRowEncoder<{ value: number }>(['value']);
+      const encoder = new TsvRowEncoder<{ value: number }>(['value']);
 
       expect(() => encoder.encode([{ value }])).toThrow(
         'Non-finite numbers must be formatted before ClickHouseBatchWriter.write()',
@@ -85,7 +85,7 @@ describe(ClickHouseTsvRowEncoder.name, () => {
   );
 
   it('encodes an empty batch as an empty body', () => {
-    const encoder = new ClickHouseTsvRowEncoder<Row>(['scalar']);
+    const encoder = new TsvRowEncoder<Row>(['scalar']);
 
     expect(encoder.encode([])).toBe('');
   });

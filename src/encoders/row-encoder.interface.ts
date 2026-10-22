@@ -1,6 +1,6 @@
-import type { RawDataFormat } from '@clickhouse/client';
+import type { DataFormat } from '@clickhouse/client';
 
-export type ClickHouseTextInsertFormat = Exclude<RawDataFormat, 'Parquet'>;
+export type ClickHouseTextInsertFormat = Exclude<DataFormat, 'Parquet'>
 
 export interface ClickHouseRowEncoder<T extends object> {
   readonly format: ClickHouseTextInsertFormat;

@@ -1,0 +1,53 @@
+{
+  "candidate": "json26",
+  "consumption": "buffer",
+  "results": {
+    "ascii": {
+      "cpuMsPerBatch": 1.5026470588235294,
+      "wallMsPerBatch": 1.488322294117647,
+      "samples": [
+        {
+          "iterations": 67,
+          "wallMsPerBatch": 1.4965049701492543,
+          "cpuMsPerBatch": 1.5008507462686567
+        },
+        {
+          "iterations": 68,
+          "wallMsPerBatch": 1.481041058823529,
+          "cpuMsPerBatch": 1.6306911764705883
+        },
+        {
+          "iterations": 69,
+          "wallMsPerBatch": 1.4666026521739122,
+          "cpuMsPerBatch": 1.4733913043478262
+        },
+        {
+          "iterations": 66,
+          "wallMsPerBatch": 1.5227733484848476,
+          "cpuMsPerBatch": 1.5283484848484847
+        },
+        {
+          "iterations": 68,
+          "wallMsPerBatch": 1.488322294117647,
+          "cpuMsPerBatch": 1.5026470588235294
+        },
+        {
+          "iterations": 67,
+          "wallMsPerBatch": 1.4934135671641795,
+          "cpuMsPerBatch": 1.6714776119402985
+        },
+        {
+          "iterations": 69,
+          "wallMsPerBatch": 1.4535320000000005,
+          "cpuMsPerBatch": 1.4582753623188405
+        }
+      ]
+    }
+  },
+  "sink": 1902567510,
+  "runtime": {
+    "node": "v26.12.1",
+    "v8": "14.6.202.34-node.40",
+    "path": "/private/tmp/codex-node26-benchmark/node-v26.12.1-darwin-arm64/bin/node"
+  }
+}

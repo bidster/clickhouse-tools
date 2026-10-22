@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import type { ClickHouseClient } from "@clickhouse/client";
 import { Module } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -10,10 +11,10 @@ import { getClickHouseBatchWriterToken } from "../../src/nest/batch-writer.token
 type EventRow = { id: string };
 
 const TEST_CLIENT = Symbol("TEST_CLIENT");
-const insert = vi.fn<ClickHouseClient["insert"]>();
+const exec = vi.fn<ClickHouseClient["exec"]>();
 
 @Module({
-  providers: [{ provide: TEST_CLIENT, useValue: { insert } }],
+  providers: [{ provide: TEST_CLIENT, useValue: { exec } }],
   exports: [TEST_CLIENT],
 })
 class TestClientModule {}
@@ -46,10 +47,10 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
 
   it("tracks a retried delivery without removing it from the queue early", async () => {
     vi.useFakeTimers();
-    insert
+    exec
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce({
-        executed: true,
+        stream: Readable.from([]),
         query_id: "retry-success",
         response_headers: {},
       });
@@ -80,7 +81,7 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
     expect(
       await metricValue("test_clickhouse_batch_writer_queue_batches", "events"),
     ).toBe(1);
-    expect(insert).not.toHaveBeenCalled();
+    expect(exec).not.toHaveBeenCalled();
     expect(
       await metricValue("test_clickhouse_batch_writer_max_batch_size_rows", "events"),
     ).toBe(3);
@@ -168,11 +169,11 @@ describe("ClickHouseBatchWriterModule Prometheus integration", () => {
   });
 
   it("reuses collectors when multiple modules use the same prefix", async () => {
-    insert.mockResolvedValue({
-      executed: true,
+    exec.mockImplementation(async () => ({
+      stream: Readable.from([]),
       query_id: "success",
       response_headers: {},
-    });
+    }));
 
     const moduleRef = await Test.createTestingModule({
       imports: [

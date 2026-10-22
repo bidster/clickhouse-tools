@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import type { ClickHouseClient } from "@clickhouse/client";
 import { Inject, Module } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -15,14 +16,14 @@ const TEST_CLIENT = Symbol("TEST_CLIENT");
 const EVENT_WRITER = getClickHouseBatchWriterToken(EVENT_WRITER_NAME);
 const WRITER_CONFIGURATION = Symbol("WRITER_CONFIGURATION");
 const CLIENT_LIFECYCLE = Symbol("CLIENT_LIFECYCLE");
-const insert = vi.fn(async () => ({ executed: true, query_id: "test" }));
+const exec = vi.fn(async () => ({ stream: Readable.from([]), query_id: "test" }));
 const shutdownOrder: string[] = [];
 
 @Module({
   providers: [
     {
       provide: TEST_CLIENT,
-      useValue: { insert } as unknown as ClickHouseClient,
+      useValue: { exec } as unknown as ClickHouseClient,
     },
     {
       provide: CLIENT_LIFECYCLE,
@@ -133,9 +134,9 @@ describe(ClickHouseBatchWriterModule.name, () => {
       ],
     }).compile();
     const client = moduleRef.get<ClickHouseClient>(CLICKHOUSE_CLIENT);
-    vi.spyOn(client, "insert").mockImplementation(async () => {
+    vi.spyOn(client, "exec").mockImplementation(async () => {
       order.push("writer-flush");
-      return { executed: true, query_id: "test", response_headers: {} };
+      return { stream: Readable.from([]), query_id: "test", response_headers: {} };
     });
     vi.spyOn(client, "close").mockImplementation(async () => {
       order.push("client-close");
@@ -173,11 +174,9 @@ describe(ClickHouseBatchWriterModule.name, () => {
 
     expect(writer).toBeInstanceOf(ClickHouseBatchWriter);
     expect(open).toHaveBeenCalledOnce();
-    expect(insert).toHaveBeenCalledWith(
+    expect(exec).toHaveBeenCalledWith(
       expect.objectContaining({
-        table: "events",
-        columns: ["id", "timestamp"],
-        format: "TabSeparated",
+        query: "INSERT INTO events (id, timestamp) FORMAT TabSeparated",
       }),
     );
 
@@ -221,9 +220,9 @@ describe(ClickHouseBatchWriterModule.name, () => {
 
   it("flushes the writer before its imported client module shuts down", async () => {
     shutdownOrder.length = 0;
-    insert.mockImplementationOnce(async () => {
+    exec.mockImplementationOnce(async () => {
       shutdownOrder.push("writer-flush");
-      return { executed: true, query_id: "test" };
+      return { stream: Readable.from([]), query_id: "test" };
     });
     const moduleRef = await Test.createTestingModule({
       imports: [

@@ -43,9 +43,7 @@ describe('ClickHouseBatchWriter batching', () => {
     expect(exec).toHaveBeenCalledTimes(1);
     expect(exec.mock.calls[0][0]).toEqual(
       expect.objectContaining({
-        table: 'custom_events',
-        columns: ['id', 'timestamp'],
-        format: 'TabSeparated',
+        query: 'INSERT INTO custom_events (id, timestamp) FORMAT TabSeparated',
       }),
     );
     expect(insertedBodies).toEqual(['1\t2026-08-11 10:00:01']);
@@ -66,7 +64,7 @@ describe('ClickHouseBatchWriter batching', () => {
     const secondFlush = service.flush();
 
     expect(exec).toHaveBeenCalledTimes(1);
-    pendingExec.resolve(undefined);
+    pendingExec.resolve({ stream: Readable.from([]) });
     await Promise.all([firstFlush, secondFlush]);
 
     expect(exec).toHaveBeenCalledTimes(1);
@@ -176,7 +174,7 @@ describe('ClickHouseBatchWriter batching', () => {
 
     service.write([row(0), row(1)]);
     service.write([row(2), row(3)]);
-    firstInsert.resolve(undefined);
+    firstInsert.resolve({ stream: Readable.from([]) });
     await vi.advanceTimersByTimeAsync(0);
 
     expect(exec).toHaveBeenCalledTimes(2);
@@ -191,7 +189,7 @@ describe('ClickHouseBatchWriter batching', () => {
     const exec = createSuccessfulExec(insertedBodies);
     const encode = vi.fn(() => 'custom encoded body');
     const service = new ClickHouseBatchWriter<EventRow>({
-      client: { insert: exec } as unknown as ClickHouseClient,
+      client: { exec } as unknown as ClickHouseClient,
       insert: {
         table: 'custom_events',
         columns: ['id', 'timestamp'],
@@ -210,9 +208,7 @@ describe('ClickHouseBatchWriter batching', () => {
     expect(encode).toHaveBeenCalledWith([event]);
     expect(exec.mock.calls[0][0]).toEqual(
       expect.objectContaining({
-        table: 'custom_events',
-        columns: ['id', 'timestamp'],
-        format: 'CSV',
+        query: 'INSERT INTO custom_events (id, timestamp) FORMAT CSV',
         clickhouse_settings: {
           async_insert: 1,
           wait_for_async_insert: 1,

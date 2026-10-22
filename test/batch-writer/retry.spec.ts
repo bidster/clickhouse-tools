@@ -2,7 +2,7 @@ import type { ClickHouseClient } from '@clickhouse/client';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ClickHouseBatchWriter } from '../../src/batch-writer.js';
-import { ClickHouseTsvRowEncoder } from '../../src/encoders/tsv-row-encoder.js';
+import { TsvRowEncoder } from '../../src/encoders/tsv-row-encoder.js';
 import {
   type EventRow,
   type Exec,
@@ -144,14 +144,15 @@ describe('ClickHouseBatchWriter retry', () => {
       .fn<Exec>(async ({ values }) => {
         attemptedBodies.push(await readBody(values));
         if (attemptedBodies.length <= 3) throw new Error('offline');
+        return { stream: Readable.from([]) };
       });
-    const rowEncoder = new ClickHouseTsvRowEncoder<EventRow>([
+    const rowEncoder = new TsvRowEncoder<EventRow>([
       'id',
       'timestamp',
     ]);
     const encode = vi.spyOn(rowEncoder, 'encode');
     const service = new ClickHouseBatchWriter<EventRow>({
-      client: { insert } as unknown as ClickHouseClient,
+      client: { exec: insert } as unknown as ClickHouseClient,
       insert: {
         table: 'custom_events',
         columns: ['id', 'timestamp'],

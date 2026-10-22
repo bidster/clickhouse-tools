@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { Readable } from 'node:stream';
 
 const esm = await import('@bidster/clickhouse-tools');
 const esmNest = await import('@bidster/clickhouse-tools/nest');
@@ -22,12 +23,23 @@ assert.equal(typeof commonjsNest.getClickHouseToken, 'function');
 assert.equal(typeof esmNest.getClickHouseBatchWriterToken, 'function');
 assert.equal(typeof commonjsNest.getClickHouseBatchWriterToken, 'function');
 
-const client = { insert: async () => ({ executed: true, query_id: 'test' }) };
+const client = { exec: async () => ({ stream: Readable.from([]) }) };
 
 for (const [core, nest] of [
   [esm, esmNest],
   [commonjs, commonjsNest],
 ]) {
+  assert.equal(typeof core.TsvRowEncoder, 'function');
+  assert.equal('ClickHouseTsvRowEncoder' in core, false);
+  assert.equal(new core.TsvRowEncoder(['id']).encode([{ id: '\t' }]), String.raw`\t`);
+  assert.equal(typeof core.CommaSeparatedJsonCompactEachRowEncoder, 'function');
+  assert.equal(typeof core.UnescapedTsvRowEncoder, 'function');
+  assert.equal(core.escapeTsvString('\t'), String.raw`\t`);
+  assert.equal(
+    new core.CommaSeparatedJsonCompactEachRowEncoder(['id']).encode([{ id: 'one' }, { id: 'two' }]),
+    '["one"],["two"]',
+  );
+  assert.equal(new core.UnescapedTsvRowEncoder(['id']).encode([{ id: '\t' }]), '\t');
   const writerName = 'package-test';
   const writerToken = nest.getClickHouseBatchWriterToken(writerName);
   const dynamicModule = nest.ClickHouseBatchWriterModule.register({
@@ -40,5 +52,6 @@ for (const [core, nest] of [
   const writer = writerProvider.useFactory(client);
 
   assert.ok(writer instanceof core.ClickHouseBatchWriter);
+  writer.write([{ id: 'one' }]);
   await writer.close();
 }

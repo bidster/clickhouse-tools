@@ -1,0 +1,53 @@
+{
+  "candidate": "tsv22",
+  "consumption": "buffer",
+  "results": {
+    "ascii": {
+      "cpuMsPerBatch": 1.2991627906976744,
+      "wallMsPerBatch": 1.1767204534883717,
+      "samples": [
+        {
+          "iterations": 84,
+          "wallMsPerBatch": 1.2020307500000005,
+          "cpuMsPerBatch": 1.3425833333333332
+        },
+        {
+          "iterations": 87,
+          "wallMsPerBatch": 1.1503491379310344,
+          "cpuMsPerBatch": 1.1500459770114944
+        },
+        {
+          "iterations": 76,
+          "wallMsPerBatch": 1.3219621710526326,
+          "cpuMsPerBatch": 1.4503947368421053
+        },
+        {
+          "iterations": 89,
+          "wallMsPerBatch": 1.1308927865168537,
+          "cpuMsPerBatch": 1.1299550561797753
+        },
+        {
+          "iterations": 82,
+          "wallMsPerBatch": 1.2244100609756094,
+          "cpuMsPerBatch": 1.3608292682926828
+        },
+        {
+          "iterations": 90,
+          "wallMsPerBatch": 1.119051855555555,
+          "cpuMsPerBatch": 1.1188777777777779
+        },
+        {
+          "iterations": 86,
+          "wallMsPerBatch": 1.1767204534883717,
+          "cpuMsPerBatch": 1.2991627906976744
+        }
+      ]
+    }
+  },
+  "sink": -1954775531,
+  "runtime": {
+    "node": "v22.22.0",
+    "v8": "12.4.254.21-node.33",
+    "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "candidate": "tsv22",
+  "consumption": "string",
+  "results": {
+    "small": {
+      "cpuMsPerBatch": 0.36251394422310756,
+      "wallMsPerBatch": 0.3761102744360899,
+      "samples": [
+        {
+          "iterations": 286,
+          "wallMsPerBatch": 0.3505898881118881,
+          "cpuMsPerBatch": 0.3502972027972028
+        },
+        {
+          "iterations": 289,
+          "wallMsPerBatch": 0.3465792975778548,
+          "cpuMsPerBatch": 0.346159169550173
+        },
+        {
+          "iterations": 251,
+          "wallMsPerBatch": 0.4060245697211158,
+          "cpuMsPerBatch": 0.36251394422310756
+        },
+        {
+          "iterations": 194,
+          "wallMsPerBatch": 0.5175294226804125,
+          "cpuMsPerBatch": 0.42017525773195874
+        },
+        {
+          "iterations": 266,
+          "wallMsPerBatch": 0.3761102744360899,
+          "cpuMsPerBatch": 0.37007142857142855
+        },
+        {
+          "iterations": 264,
+          "wallMsPerBatch": 0.37918907575757566,
+          "cpuMsPerBatch": 0.37373863636363636
+        },
+        {
+          "iterations": 272,
+          "wallMsPerBatch": 0.3678253676470588,
+          "cpuMsPerBatch": 0.36250367647058823
+        }
+      ]
+    },
+    "json256": {
+      "cpuMsPerBatch": 0.44876991150442475,
+      "wallMsPerBatch": 0.4448709424778762,
+      "samples": [
+        {
+          "iterations": 226,
+          "wallMsPerBatch": 0.4448709424778762,
+          "cpuMsPerBatch": 0.44876991150442475
+        },
+        {
+          "iterations": 227,
+          "wallMsPerBatch": 0.4424761409691621,
+          "cpuMsPerBatch": 0.4631629955947137
+        },
+        {
+          "iterations": 227,
+          "wallMsPerBatch": 0.441452092511014,
+          "cpuMsPerBatch": 0.44189867841409697
+        },
+        {
+          "iterations": 229,
+          "wallMsPerBatch": 0.4376930480349346,
+          "cpuMsPerBatch": 0.43778165938864627
+        },
+        {
+          "iterations": 226,
+          "wallMsPerBatch": 0.44560472123893874,
+          "cpuMsPerBatch": 0.4967699115044248
+        },
+        {
+          "iterations": 222,
+          "wallMsPerBatch": 0.4514020270270263,
+          "cpuMsPerBatch": 0.4637072072072072
+        },
+        {
+          "iterations": 222,
+          "wallMsPerBatch": 0.45065803153153233,
+          "cpuMsPerBatch": 0.4446756756756757
+        }
+      ]
+    },
+    "escaped": {
+      "cpuMsPerBatch": 1.0992282608695654,
+      "wallMsPerBatch": 1.0991644021739138,
+      "samples": [
+        {
+          "iterations": 91,
+          "wallMsPerBatch": 1.1059647362637337,
+          "cpuMsPerBatch": 1.1059560439560439
+        },
+        {
+          "iterations": 93,
+          "wallMsPerBatch": 1.079773752688173,
+          "cpuMsPerBatch": 1.08047311827957
+        },
+        {
+          "iterations": 92,
+          "wallMsPerBatch": 1.0872069673913034,
+          "cpuMsPerBatch": 1.0886847826086956
+        },
+        {
+          "iterations": 92,
+          "wallMsPerBatch": 1.0991644021739138,
+          "cpuMsPerBatch": 1.0992282608695654
+        },
+        {
+          "iterations": 93,
+          "wallMsPerBatch": 1.0864735698924735,
+          "cpuMsPerBatch": 1.086483870967742
+        },
+        {
+          "iterations": 83,
+          "wallMsPerBatch": 1.2131922650602416,
+          "cpuMsPerBatch": 1.2029759036144578
+        },
+        {
+          "iterations": 76,
+          "wallMsPerBatch": 1.3319808157894708,
+          "cpuMsPerBatch": 1.200342105263158
+        }
+      ]
+    },
+    "unicode": {
+      "cpuMsPerBatch": 0.5426521739130434,
+      "wallMsPerBatch": 0.545900815217393,
+      "samples": [
+        {
+          "iterations": 188,
+          "wallMsPerBatch": 0.5321396276595743,
+          "cpuMsPerBatch": 0.5304787234042554
+        },
+        {
+          "iterations": 187,
+          "wallMsPerBatch": 0.5366078395721934,
+          "cpuMsPerBatch": 0.5356417112299465
+        },
+        {
+          "iterations": 190,
+          "wallMsPerBatch": 0.5281160052631573,
+          "cpuMsPerBatch": 0.5511947368421053
+        },
+        {
+          "iterations": 178,
+          "wallMsPerBatch": 0.5625613314606746,
+          "cpuMsPerBatch": 0.5602584269662921
+        },
+        {
+          "iterations": 185,
+          "wallMsPerBatch": 0.5473090054054041,
+          "cpuMsPerBatch": 0.5294162162162162
+        },
+        {
+          "iterations": 184,
+          "wallMsPerBatch": 0.545900815217393,
+          "cpuMsPerBatch": 0.5426521739130434
+        },
+        {
+          "iterations": 132,
+          "wallMsPerBatch": 0.7606736136363618,
+          "cpuMsPerBatch": 0.6413787878787879
+        }
+      ]
+    },
+    "large": {
+      "cpuMsPerBatch": 1.1645232558139536,
+      "wallMsPerBatch": 1.1690053372093019,
+      "samples": [
+        {
+          "iterations": 89,
+          "wallMsPerBatch": 1.1352233146067396,
+          "cpuMsPerBatch": 1.1359325842696628
+        },
+        {
+          "iterations": 86,
+          "wallMsPerBatch": 1.1690053372093019,
+          "cpuMsPerBatch": 1.1645232558139536
+        },
+        {
+          "iterations": 81,
+          "wallMsPerBatch": 1.2458261358024736,
+          "cpuMsPerBatch": 1.3580987654320988
+        },
+        {
+          "iterations": 86,
+          "wallMsPerBatch": 1.1736346860465092,
+          "cpuMsPerBatch": 1.1731511627906976
+        },
+        {
+          "iterations": 85,
+          "wallMsPerBatch": 1.1826166588235376,
+          "cpuMsPerBatch": 1.3160235294117646
+        },
+        {
+          "iterations": 102,
+          "wallMsPerBatch": 0.9867606176470534,
+          "cpuMsPerBatch": 0.9854019607843136
+        },
+        {
+          "iterations": 98,
+          "wallMsPerBatch": 1.0299285714285713,
+          "cpuMsPerBatch": 1.1363367346938775
+        }
+      ]
+    },
+    "ascii": {
+      "cpuMsPerBatch": 1.0258191489361703,
+      "wallMsPerBatch": 1.0172104444444436,
+      "samples": [
+        {
+          "iterations": 94,
+          "wallMsPerBatch": 1.0676830638297825,
+          "cpuMsPerBatch": 1.0258191489361703
+        },
+        {
+          "iterations": 99,
+          "wallMsPerBatch": 1.0172104444444436,
+          "cpuMsPerBatch": 1.1153232323232323
+        },
+        {
+          "iterations": 102,
+          "wallMsPerBatch": 0.9832875882352888,
+          "cpuMsPerBatch": 0.9820686274509804
+        },
+        {
+          "iterations": 99,
+          "wallMsPerBatch": 1.010206646464644,
+          "cpuMsPerBatch": 1.1167373737373738
+        },
+        {
+          "iterations": 104,
+          "wallMsPerBatch": 0.9682207500000004,
+          "cpuMsPerBatch": 0.9671057692307692
+        },
+        {
+          "iterations": 98,
+          "wallMsPerBatch": 1.0334464285714307,
+          "cpuMsPerBatch": 1.1143877551020407
+        },
+        {
+          "iterations": 99,
+          "wallMsPerBatch": 1.0187133838383884,
+          "cpuMsPerBatch": 1.0176969696969695
+        }
+      ]
+    }
+  },
+  "sink": -1464633275,
+  "runtime": {
+    "node": "v22.22.0",
+    "v8": "12.4.254.21-node.33",
+    "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+  }
+}

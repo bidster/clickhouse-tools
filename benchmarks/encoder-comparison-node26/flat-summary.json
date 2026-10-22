@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "date": "2026-10-22T08:12:21.681Z",
+    "runtimes": [
+      {
+        "node": "v22.22.0",
+        "v8": "12.4.254.21-node.33",
+        "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+      },
+      {
+        "node": "v26.12.1",
+        "v8": "14.6.202.34-node.40",
+        "path": "/private/tmp/codex-node26-benchmark/node-v26.12.1-darwin-arm64/bin/node"
+      }
+    ],
+    "platform": "darwin",
+    "release": "27.0.0",
+    "architecture": "arm64",
+    "cpu": "Apple M4 Max",
+    "cpuCount": 14,
+    "batchSize": 1000,
+    "repetitions": 3,
+    "rounds": 7,
+    "warmupMs": 200,
+    "roundMs": 100,
+    "sourceHashes": {
+      "escape-tsv-string.ts": "ae3fe9e0dbe9bddd9e7c498765d49ebdeb372161b4fd8a8e51d48c6010ff8011",
+      "tsv-row-encoder.ts": "4c88a6c5d520328cee7363dd8c033778dab45644863994328a446d1cb718a9ed",
+      "unescaped-tsv-row-encoder.ts": "4372ab0f158e155b3de04144aa2753d0f79ca49c2cbc0562fd190f764675779b",
+      "comma-separated-json-compact-each-row-encoder.ts": "b5931b38b2be7f8da95ea561f4edcfec017011cd2cedfd4809d897c53b3598e8"
+    },
+    "representation": "JSON.parse(JSON.stringify(rows)) before preparation, warmup and measurement; all fields"
+  },
+  "results": {
+    "tsv22": {
+      "cpuMsPerBatch": 1.0917227722772276,
+      "cpuMin": 1.0856732673267326,
+      "cpuMax": 1.1312978723404254,
+      "wallMsPerBatch": 0.9991951287128711,
+      "wallMin": 0.9960301089108905,
+      "wallMax": 1.1345393258426972
+    },
+    "unescaped22": {
+      "cpuMsPerBatch": 1.016537037037037,
+      "cpuMin": 0.9292314814814815,
+      "cpuMax": 1.2147875000000001,
+      "wallMsPerBatch": 0.9321986944444445,
+      "wallMin": 0.9270208333333332,
+      "wallMax": 1.234883121951219
+    },
+    "prepared22": {
+      "cpuMsPerBatch": 0.6782883435582823,
+      "cpuMin": 0.6743536585365854,
+      "cpuMax": 0.6843703703703703,
+      "wallMsPerBatch": 0.6103734756097564,
+      "wallMin": 0.6087787878787884,
+      "wallMax": 0.6148882944785272
+    },
+    "json22": {
+      "cpuMsPerBatch": 1.67885,
+      "cpuMin": 1.5910952380952381,
+      "cpuMax": 1.7619302325581396,
+      "wallMsPerBatch": 1.6618467741935472,
+      "wallMin": 1.5877169365079362,
+      "wallMax": 1.7325632241379323
+    },
+    "json26": {
+      "cpuMsPerBatch": 0.457579185520362,
+      "cpuMin": 0.4391239316239316,
+      "cpuMax": 0.48321145374449337,
+      "wallMsPerBatch": 0.44224266079295116,
+      "wallMin": 0.43404437229437254,
+      "wallMax": 0.45286727149321265
+    }
+  }
+}

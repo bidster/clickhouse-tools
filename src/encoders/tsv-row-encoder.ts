@@ -1,4 +1,5 @@
 import type { ClickHouseRowEncoder } from './row-encoder.interface.js';
+import { escapeTsvString } from './escape-tsv-string.js';
 
 export interface ClickHouseRawTsvValue {
   readonly raw: string;
@@ -16,7 +17,7 @@ export function rawTsv(raw: string): ClickHouseRawTsvValue {
   return { raw };
 }
 
-export class ClickHouseTsvRowEncoder<T extends object>
+export class TsvRowEncoder<T extends object>
   implements ClickHouseRowEncoder<T>
 {
   readonly format = 'TabSeparated';
@@ -35,7 +36,7 @@ export class ClickHouseTsvRowEncoder<T extends object>
 
   private encodeValue(value: unknown): string {
     if (value === null) return '\\N';
-    if (typeof value === 'string') return this.escapeTsv(value);
+    if (typeof value === 'string') return escapeTsvString(value);
     if (typeof value === 'boolean') return String(value);
     if (typeof value === 'bigint') return String(value);
     if (typeof value === 'number') {
@@ -64,13 +65,5 @@ export class ClickHouseTsvRowEncoder<T extends object>
     throw new TypeError(
       `${valueType} values must be formatted before ClickHouseBatchWriter.write()`,
     );
-  }
-
-  private escapeTsv(value: string): string {
-    return value
-      .replace(/\\/g, '\\\\')
-      .replace(/\t/g, '\\t')
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '\\r');
   }
 }

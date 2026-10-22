@@ -1,7 +1,7 @@
 import type { ClickHouseClient, ClickHouseSettings } from '@clickhouse/client';
-import { Readable } from 'node:stream';
+import { addAbortSignal, Readable } from 'node:stream';
 import {
-  ClickHouseTsvRowEncoder,
+  TsvRowEncoder,
 } from './encoders/tsv-row-encoder.js';
 import type {
   ClickHouseRowEncoder,
@@ -100,7 +100,7 @@ export class ClickHouseBatchWriter<T extends object> {
       clickhouse_settings: options.insert.clickhouse_settings,
     };
     this.rowEncoder =
-      options.rowEncoder ?? new ClickHouseTsvRowEncoder(this.insert.columns);
+      options.rowEncoder ?? new TsvRowEncoder(this.insert.columns);
     this.buffer = options.buffer ?? new ClickHouseArrayRowBuffer<T>();
     this.flushIntervalMs = options.flushIntervalMs ?? 1_000;
     this.maxBatchSize = options.maxBatchSize ?? 10_000;
@@ -254,12 +254,16 @@ export class ClickHouseBatchWriter<T extends object> {
       const insertStartedAt = performance.now();
 
       try {
-        await this.client.insert({
-          ...this.insert,
-          format: batch.format,
+        const { stream } = await this.client.exec({
+          query: `INSERT INTO ${this.insert.table.trim()} (${this.insert.columns.join(', ')}) FORMAT ${batch.format}`,
+          clickhouse_settings: this.insert.clickhouse_settings,
           abort_signal: signal,
           values: Readable.from([batch.body], { objectMode: false }),
         });
+        // The client stops observing the external signal once exec() returns.
+        for await (const chunk of addAbortSignal(signal, stream)) {
+          void chunk;
+        }
       } catch (cause) {
         this.metrics?.insertFailed(
           (performance.now() - insertStartedAt) / 1_000,

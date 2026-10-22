@@ -1,0 +1,329 @@
+{
+  "metadata": {
+    "date": "2026-10-22T08:12:21.681Z",
+    "runtimes": [
+      {
+        "node": "v22.22.0",
+        "v8": "12.4.254.21-node.33",
+        "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+      },
+      {
+        "node": "v26.12.1",
+        "v8": "14.6.202.34-node.40",
+        "path": "/private/tmp/codex-node26-benchmark/node-v26.12.1-darwin-arm64/bin/node"
+      }
+    ],
+    "platform": "darwin",
+    "release": "27.0.0",
+    "architecture": "arm64",
+    "cpu": "Apple M4 Max",
+    "cpuCount": 14,
+    "batchSize": 1000,
+    "repetitions": 5,
+    "rounds": 7,
+    "warmupMs": 200,
+    "roundMs": 100,
+    "sourceHashes": {
+      "escape-tsv-string.ts": "ae3fe9e0dbe9bddd9e7c498765d49ebdeb372161b4fd8a8e51d48c6010ff8011",
+      "tsv-row-encoder.ts": "4c88a6c5d520328cee7363dd8c033778dab45644863994328a446d1cb718a9ed",
+      "unescaped-tsv-row-encoder.ts": "4372ab0f158e155b3de04144aa2753d0f79ca49c2cbc0562fd190f764675779b",
+      "comma-separated-json-compact-each-row-encoder.ts": "b5931b38b2be7f8da95ea561f4edcfec017011cd2cedfd4809d897c53b3598e8"
+    }
+  },
+  "results": {
+    "small": {
+      "tsv22": {
+        "cpuMsPerBatch": 0.3547517730496454,
+        "cpuMin": 0.33694276094276093,
+        "cpuMax": 0.36251394422310756,
+        "wallMsPerBatch": 0.3551526276595744,
+        "wallMin": 0.3372199764309763,
+        "wallMax": 0.3761102744360899
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 0.3019789156626506,
+        "cpuMin": 0.2938973607038123,
+        "cpuMax": 0.3076707692307692,
+        "wallMsPerBatch": 0.30176305421686733,
+        "wallMin": 0.29387793255131966,
+        "wallMax": 0.30779205230769235
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.2697142857142857,
+        "cpuMin": 0.26211256544502615,
+        "cpuMax": 0.2840054644808743,
+        "wallMsPerBatch": 0.2688030616621985,
+        "wallMin": 0.26223614921465943,
+        "wallMax": 0.29363526392961886
+      },
+      "json22": {
+        "cpuMsPerBatch": 0.25108977556109724,
+        "cpuMin": 0.24656650246305417,
+        "cpuMax": 0.26318110236220477,
+        "wallMsPerBatch": 0.25074519548872176,
+        "wallMin": 0.24520425916870417,
+        "wallMax": 0.2630521653543305
+      },
+      "json26": {
+        "cpuMsPerBatch": 0.23010321100917433,
+        "cpuMin": 0.22573873873873873,
+        "cpuMax": 0.23055022831050226,
+        "wallMsPerBatch": 0.22950630733944954,
+        "wallMin": 0.22544650900900878,
+        "wallMax": 0.2302345793103447
+      }
+    },
+    "json256": {
+      "tsv22": {
+        "cpuMsPerBatch": 0.4449422222222222,
+        "cpuMin": 0.42724892703862666,
+        "cpuMax": 0.467046511627907,
+        "wallMsPerBatch": 0.4448709424778762,
+        "wallMin": 0.429318669527897,
+        "wallMax": 0.4659687999999997
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 0.3894612403100775,
+        "cpuMin": 0.378588679245283,
+        "cpuMax": 0.41003765690376565,
+        "wallMsPerBatch": 0.3885360155038756,
+        "wallMin": 0.3780867924528301,
+        "wallMax": 0.41626780912863043
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.286323782234957,
+        "cpuMin": 0.2781722222222222,
+        "cpuMax": 0.30229651162790694,
+        "wallMsPerBatch": 0.2870866762177651,
+        "wallMin": 0.2784267361111113,
+        "wallMax": 0.291281613372093
+      },
+      "json22": {
+        "cpuMsPerBatch": 0.3567544483985765,
+        "cpuMin": 0.34920557491289195,
+        "cpuMax": 0.3606007194244604,
+        "wallMsPerBatch": 0.3524313380281683,
+        "wallMin": 0.34879500696864096,
+        "wallMax": 0.36038339208633147
+      },
+      "json26": {
+        "cpuMsPerBatch": 0.33666107382550337,
+        "cpuMin": 0.3293552631578947,
+        "cpuMax": 0.3579856630824373,
+        "wallMsPerBatch": 0.33633221476510095,
+        "wallMin": 0.3289876644736842,
+        "wallMax": 0.35895415053763463
+      }
+    },
+    "escaped": {
+      "tsv22": {
+        "cpuMsPerBatch": 1.1211333333333333,
+        "cpuMin": 1.0694468085106383,
+        "cpuMax": 1.1389886363636363,
+        "wallMsPerBatch": 1.1207171333333312,
+        "wallMin": 1.071655138297869,
+        "wallMax": 1.1371065340909106
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 1.1051382978723403,
+        "cpuMin": 1.0868315789473684,
+        "cpuMax": 1.1412417582417582,
+        "wallMsPerBatch": 1.0712708297872346,
+        "wallMin": 1.0527272000000027,
+        "wallMax": 1.1038360879120914
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.31178193146417443,
+        "cpuMin": 0.3077675840978593,
+        "cpuMax": 0.3165,
+        "wallMsPerBatch": 0.3165710696202533,
+        "wallMin": 0.30802879816513795,
+        "wallMax": 0.3183514571428575
+      },
+      "json22": {
+        "cpuMsPerBatch": 0.3724609665427509,
+        "cpuMin": 0.3684154411764706,
+        "cpuMax": 0.3769101123595506,
+        "wallMsPerBatch": 0.37213382899628356,
+        "wallMin": 0.36805622058823545,
+        "wallMax": 0.3766566390977442
+      },
+      "json26": {
+        "cpuMsPerBatch": 0.39354724409448816,
+        "cpuMin": 0.37953787878787876,
+        "cpuMax": 0.43117857142857147,
+        "wallMsPerBatch": 0.393431043137255,
+        "wallMin": 0.37919192045454553,
+        "wallMax": 0.4323290215517247
+      }
+    },
+    "unicode": {
+      "tsv22": {
+        "cpuMsPerBatch": 0.5425027027027027,
+        "cpuMin": 0.5245287958115183,
+        "cpuMax": 0.5455659340659341,
+        "wallMsPerBatch": 0.5432979729729743,
+        "wallMin": 0.5255152722513078,
+        "wallMax": 0.5488608852459018
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 0.49030243902439025,
+        "cpuMin": 0.4826459330143541,
+        "cpuMax": 0.5057373737373737,
+        "wallMsPerBatch": 0.4908880097560985,
+        "wallMin": 0.48181590384615447,
+        "wallMax": 0.5052842979797962
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.3655109489051095,
+        "cpuMin": 0.35810714285714285,
+        "cpuMax": 0.3759659090909091,
+        "wallMsPerBatch": 0.36593309124087636,
+        "wallMin": 0.35835922500000056,
+        "wallMax": 0.38886821705426344
+      },
+      "json22": {
+        "cpuMsPerBatch": 0.40300803212851405,
+        "cpuMin": 0.3985873015873016,
+        "cpuMax": 0.4101632653061224,
+        "wallMsPerBatch": 0.4024561566265052,
+        "wallMin": 0.3980796944444433,
+        "wallMax": 0.4097751673469377
+      },
+      "json26": {
+        "cpuMsPerBatch": 0.4478125,
+        "cpuMin": 0.4370521739130435,
+        "cpuMax": 0.44988789237668164,
+        "wallMsPerBatch": 0.4471333705357158,
+        "wallMin": 0.43636739130434843,
+        "wallMax": 0.4494310538116591
+      }
+    },
+    "large": {
+      "tsv22": {
+        "cpuMsPerBatch": 1.1623814432989692,
+        "cpuMin": 0.9703076923076923,
+        "cpuMax": 1.1838470588235293,
+        "wallMsPerBatch": 1.0432534791666608,
+        "wallMin": 0.9714330961538473,
+        "wallMax": 1.1779509764705889
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 1.0324074074074074,
+        "cpuMin": 1.0136216216216216,
+        "cpuMax": 1.050214953271028,
+        "wallMsPerBatch": 0.9361053240740721,
+        "wallMin": 0.9062946756756786,
+        "wallMax": 0.9683593750000035
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.6799634146341463,
+        "cpuMin": 0.6773719512195122,
+        "cpuMax": 0.7161012658227849,
+        "wallMsPerBatch": 0.6151485153374215,
+        "wallMin": 0.6088257575757586,
+        "wallMax": 0.6361418797468323
+      },
+      "json22": {
+        "cpuMsPerBatch": 1.642590163934426,
+        "cpuMin": 1.6209677419354838,
+        "cpuMax": 1.6553278688524589,
+        "wallMsPerBatch": 1.641125672131134,
+        "wallMin": 1.6187735161290309,
+        "wallMax": 1.6472957704917925
+      },
+      "json26": {
+        "cpuMsPerBatch": 1.3814657534246575,
+        "cpuMin": 1.3270131578947368,
+        "cpuMax": 1.3952916666666666,
+        "wallMsPerBatch": 1.3775479452054815,
+        "wallMin": 1.3240910131579,
+        "wallMax": 1.3919565972222219
+      }
+    },
+    "ascii": {
+      "tsv22": {
+        "cpuMsPerBatch": 1.0258191489361703,
+        "cpuMin": 0.9483773584905661,
+        "cpuMax": 1.1076161616161615,
+        "wallMsPerBatch": 1.0172104444444436,
+        "wallMin": 0.9489496886792451,
+        "wallMax": 1.0343874536082478
+      },
+      "unescaped22": {
+        "cpuMsPerBatch": 1.0226542056074768,
+        "cpuMin": 0.9795462962962963,
+        "cpuMax": 1.137435294117647,
+        "wallMsPerBatch": 0.9434427570093452,
+        "wallMin": 0.9327249166666645,
+        "wallMax": 1.1563759655172434
+      },
+      "prepared22": {
+        "cpuMsPerBatch": 0.5902189349112426,
+        "cpuMin": 0.5840290697674418,
+        "cpuMax": 0.6154753086419753,
+        "wallMsPerBatch": 0.5922485207100601,
+        "wallMin": 0.5854571220930233,
+        "wallMax": 0.6168392085889587
+      },
+      "json22": {
+        "cpuMsPerBatch": 1.576515625,
+        "cpuMin": 1.5475846153846153,
+        "cpuMax": 1.7441724137931036,
+        "wallMsPerBatch": 1.573367187499997,
+        "wallMin": 1.545610246153844,
+        "wallMax": 1.6373743225806485
+      },
+      "json26": {
+        "cpuMsPerBatch": 1.325486842105263,
+        "cpuMin": 1.2867564102564104,
+        "cpuMax": 1.3813225806451612,
+        "wallMsPerBatch": 1.3224890263157871,
+        "wallMin": 1.2830117564102552,
+        "wallMax": 1.467681159420296
+      }
+    }
+  },
+  "bufferControl": {
+    "tsv22": {
+      "cpuMsPerBatch": 1.2991627906976744,
+      "cpuMin": 1.2791590909090909,
+      "cpuMax": 1.3509404761904762,
+      "wallMsPerBatch": 1.1767204534883717,
+      "wallMin": 1.154745206896551,
+      "wallMax": 1.197973214285715
+    },
+    "unescaped22": {
+      "cpuMsPerBatch": 1.2220217391304349,
+      "cpuMin": 1.2050107526881721,
+      "cpuMax": 1.2478539325842697,
+      "wallMsPerBatch": 1.1098516483516492,
+      "wallMin": 1.0980443804347826,
+      "wallMax": 1.1239784719101125
+    },
+    "prepared22": {
+      "cpuMsPerBatch": 0.8877265625,
+      "cpuMin": 0.8834090909090909,
+      "cpuMax": 0.904592,
+      "wallMsPerBatch": 0.8032648809523808,
+      "wallMin": 0.7845032578125002,
+      "wallMax": 0.80376837007874
+    },
+    "json22": {
+      "cpuMsPerBatch": 1.8265999999999998,
+      "cpuMin": 1.7721578947368422,
+      "cpuMax": 1.8270181818181819,
+      "wallMsPerBatch": 1.7833340526315786,
+      "wallMin": 1.7695635964912277,
+      "wallMax": 1.8078139821428567
+    },
+    "json26": {
+      "cpuMsPerBatch": 1.4262957746478873,
+      "cpuMin": 1.3489333333333333,
+      "cpuMax": 1.5026470588235294,
+      "wallMsPerBatch": 1.410562802816901,
+      "wallMin": 1.321560302631579,
+      "wallMax": 1.488322294117647
+    }
+  }
+}

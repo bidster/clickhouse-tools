@@ -1,0 +1,54 @@
+{
+  "candidate": "unescaped22",
+  "consumption": "string",
+  "flatInput": true,
+  "results": {
+    "ascii": {
+      "cpuMsPerBatch": 1.2147875000000001,
+      "wallMsPerBatch": 1.234883121951219,
+      "samples": [
+        {
+          "iterations": 83,
+          "wallMsPerBatch": 1.2057118554216864,
+          "cpuMsPerBatch": 1.3418192771084336
+        },
+        {
+          "iterations": 80,
+          "wallMsPerBatch": 1.2636401000000006,
+          "cpuMsPerBatch": 1.2147875000000001
+        },
+        {
+          "iterations": 72,
+          "wallMsPerBatch": 1.3927193333333336,
+          "cpuMsPerBatch": 1.4605277777777779
+        },
+        {
+          "iterations": 95,
+          "wallMsPerBatch": 1.056293421052631,
+          "cpuMsPerBatch": 1.0585052631578948
+        },
+        {
+          "iterations": 82,
+          "wallMsPerBatch": 1.234883121951219,
+          "cpuMsPerBatch": 1.1717560975609755
+        },
+        {
+          "iterations": 79,
+          "wallMsPerBatch": 1.2750791139240498,
+          "cpuMsPerBatch": 1.3715316455696203
+        },
+        {
+          "iterations": 87,
+          "wallMsPerBatch": 1.152252873563217,
+          "cpuMsPerBatch": 1.1422298850574713
+        }
+      ]
+    }
+  },
+  "sink": -1901375182,
+  "runtime": {
+    "node": "v22.22.0",
+    "v8": "12.4.254.21-node.33",
+    "path": "/Users/mayorovigor/.nvm/versions/node/v22.22.0/bin/node"
+  }
+}

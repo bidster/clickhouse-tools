@@ -24,15 +24,13 @@ export type VerboseRow = {
 };
 
 type ExecRequest = {
-  table: string;
-  columns: string[];
-  format: string;
+  query: string;
   values: Readable;
   abort_signal?: AbortSignal;
   clickhouse_settings?: ClickHouseSettings;
 };
 
-export type ExecResult = unknown;
+export type ExecResult = { stream: Readable };
 export type Exec = (request: ExecRequest) => Promise<ExecResult>;
 export type ExecMock = ReturnType<typeof vi.fn<Exec>>;
 
@@ -77,7 +75,7 @@ export function createService(
   logger: ClickHouseToolsLogger = createLogger(),
 ): ClickHouseBatchWriter<EventRow> {
   return new ClickHouseBatchWriter<EventRow>({
-    client: { insert: exec } as unknown as ClickHouseClient,
+    client: { exec } as unknown as ClickHouseClient,
     insert: {
       table: 'custom_events',
       columns: ['id', 'timestamp'],
